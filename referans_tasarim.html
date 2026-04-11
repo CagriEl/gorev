@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kırklareli Belediyesi - Görev Yönetim Sistemi</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { min-height: 100vh; background-color: #1e293b; color: white; width: 260px; }
+        .sidebar .nav-link { color: #94a3b8; border-radius: 0; padding: 15px 20px; text-align: left; font-size: 15px; border-left: 4px solid transparent; transition: all 0.3s; cursor: pointer;}
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #334155; color: white; border-left: 4px solid #3b82f6; font-weight: bold; }
+        .kpi-card, .custom-card { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .icon-box { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 22px; }
+        .table-hover tbody tr { transition: background-color 0.2s; cursor: pointer; }
+        .table-hover tbody tr:hover { background-color: #e2e8f0; }
+        .w-20px { width: 25px; text-align: center; }
+        .table-container { max-height: 500px; overflow-y: auto; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .table-container thead th { position: sticky; top: 0; background-color: #f8fafc; z-index: 1; border-bottom: 2px solid #cbd5e1; }
+        .assignee-card { background-color: #f1f5f9; border-radius: 10px; padding: 12px; border: 1px solid #e2e8f0; }
+        .timeline-log { border-left: 2px solid #cbd5e1; padding-left: 15px; margin-left: 10px; position: relative; padding-bottom: 15px; }
+        .timeline-log::before { content: ''; position: absolute; left: -6px; top: 0; width: 10px; height: 10px; border-radius: 50%; background-color: #3b82f6; }
+        .timeline-log.border-0::before { background-color: #10b981; }
+        .toast-container { z-index: 1060; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .status-pin { width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.4); transition: transform 0.2s; }
+        .status-pin:hover { transform: scale(1.3); cursor: pointer; }
+        .pin-warning { background-color: #ffc107; } .pin-success { background-color: #198754; } .pin-info { background-color: #0dcaf0; } .pin-secondary { background-color: #6c757d; }
+        .tab-pane { transition: opacity 0.3s ease-in-out; }
+    </style>
+</head>
+<body>
+
+<div class="d-flex">
+    <div class="sidebar d-none d-md-block flex-shrink-0">
+        <div class="p-4 text-center border-bottom border-secondary mb-3">
+            <h5 class="mb-0 fw-bold text-white"><i class="fa-solid fa-city me-2"></i>Bel-Sistem</h5>
+            <small class="text-muted">Kırklareli Yönetim vFinal</small>
+        </div>
+        <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist">
+            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#dashboard"><i class="fa-solid fa-chart-pie me-2 w-20px"></i> Yönetim Özeti</button>
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tasks"><i class="fa-solid fa-list-check me-2 w-20px"></i> Tüm Görevler</button>
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#resolved-tasks"><i class="fa-solid fa-stopwatch me-2 w-20px"></i> Çözümlenen Görevler</button>
+            <button class="nav-link" id="map-tab" data-bs-toggle="pill" data-bs-target="#map"><i class="fa-solid fa-map-location-dot me-2 w-20px"></i> Saha Operasyonu</button>
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#directorates"><i class="fa-solid fa-sitemap me-2 w-20px"></i> Müdürlük Yönetimi</button>
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#reports"><i class="fa-solid fa-chart-line me-2 w-20px"></i> Gelişmiş Raporlar</button>
+        </div>
+    </div>
+
+    <div class="flex-grow-1 overflow-hidden">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom px-4 py-3 shadow-sm">
+            <div class="d-flex justify-content-between w-100 align-items-center">
+                <form class="d-flex w-25" onsubmit="return false;">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 rounded-start-pill"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                        <input class="form-control rounded-end-pill bg-light border-0 shadow-none" type="search" id="globalSearch" placeholder="Görevlerde ara (Su, Park, 1045)...">
+                    </div>
+                </form>
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-primary rounded-pill px-4 me-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#newTaskModal"><i class="fa-solid fa-plus me-1"></i> Yeni Görev</button>
+                    <div class="d-flex align-items-center border-start ps-3 ms-2">
+                        <img src="https://ui-avatars.com/api/?name=Admin+User&background=3b82f6&color=fff" class="rounded-circle me-2" width="40" alt="User">
+                        <span class="fw-medium text-dark d-none d-md-block">Sistem Yöneticisi</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="p-4" style="height: calc(100vh - 76px); overflow-y: auto;">
+            <div class="tab-content" id="v-pills-tabContent">
+                
+                <div class="tab-pane fade show active" id="dashboard">
+                    <h4 class="mb-4 fw-bold">Yönetim Özeti</h4>
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-3"><div class="card kpi-card"><div class="card-body d-flex justify-content-between align-items-center"><div><p class="text-muted mb-1 fs-6">Açık Görevler</p><h3 class="mb-0 fw-bold" id="kpiOpenTasks">48</h3></div><div class="icon-box bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-folder-open"></i></div></div></div></div>
+                        <div class="col-md-3"><div class="card kpi-card"><div class="card-body d-flex justify-content-between align-items-center"><div><p class="text-muted mb-1 fs-6">Acil Müdahale</p><h3 class="mb-0 fw-bold text-danger">7</h3></div><div class="icon-box bg-danger bg-opacity-10 text-danger"><i class="fa-solid fa-triangle-exclamation"></i></div></div></div></div>
+                        <div class="col-md-3"><div class="card kpi-card"><div class="card-body d-flex justify-content-between align-items-center"><div><p class="text-muted mb-1 fs-6">Bu Hafta Çözülen</p><h3 class="mb-0 fw-bold text-success">134</h3></div><div class="icon-box bg-success bg-opacity-10 text-success"><i class="fa-solid fa-check-double"></i></div></div></div></div>
+                        <div class="col-md-3"><div class="card kpi-card"><div class="card-body d-flex justify-content-between align-items-center"><div><p class="text-muted mb-1 fs-6">Sahadaki Ekipler</p><h3 class="mb-0 fw-bold text-warning">22</h3></div><div class="icon-box bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-truck-fast"></i></div></div></div></div>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-8"><div class="card custom-card h-100"><div class="card-header bg-white border-0 pt-4 pb-0"><h6 class="fw-bold">Haftalık İş Yükü (Genel)</h6></div><div class="card-body" style="height: 320px;"><canvas id="barChart"></canvas></div></div></div>
+                        <div class="col-md-4"><div class="card custom-card h-100"><div class="card-header bg-white border-0 pt-4 pb-0"><h6 class="fw-bold">Gecikme Sebepleri</h6></div><div class="card-body" style="height: 320px;"><canvas id="pieChart"></canvas></div></div></div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="tasks">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold mb-0">Tüm Görevler</h4>
+                        <span class="text-muted fs-6" id="searchResultText"></span>
+                    </div>
+                    <div class="card custom-card">
+                        <div class="table-container" style="max-height: 600px;">
+                            <table class="table table-hover align-middle mb-0" id="mainTaskTable">
+                                <thead class="table-light"><tr><th class="ps-4">ID</th><th>Başlık / Konum</th><th>Birim</th><th>Öncelik</th><th>Durum</th></tr></thead>
+                                <tbody id="mainTaskTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="resolved-tasks">
+                    <div class="d-flex justify-content-between align-items-end mb-4">
+                        <div>
+                            <h4 class="fw-bold mb-1">Çözümlenen Görevler & SLA Analizi</h4>
+                            <span class="text-muted fs-6 d-block">Tamamlanan görevlerin atanma, sahaya çıkış ve tam çözüm süreleri (dakika bazlı).</span>
+                        </div>
+                        <button class="btn btn-outline-success bg-white shadow-sm" onclick="exportReport('Excel')"><i class="fa-solid fa-file-excel me-2"></i>Süreyi Dışa Aktar</button>
+                    </div>
+                    <div class="card custom-card p-0">
+                        <div class="table-container" style="max-height: 600px;">
+                            <table class="table table-hover align-middle mb-0 text-center" id="resolvedTaskTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-start ps-4">Görev ID / Başlık</th>
+                                        <th>Sorumlu Birim & Ekip</th>
+                                        <th>Atanma</th>
+                                        <th>Sahaya Çıkış</th>
+                                        <th class="text-success">Tamamlanma</th>
+                                        <th class="fw-bold text-dark">Çözüm Süresi (Dk)</th>
+                                        <th>SLA Durumu</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resolvedTaskTableBody">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="map">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-bold mb-0">Saha Operasyonu - Kırklareli</h4>
+                        <span class="badge bg-success px-3 py-2"><i class="fa-solid fa-circle-dot fa-fade me-2"></i>Canlı Veri</span>
+                    </div>
+                    <div class="d-flex gap-3 mb-3 fs-6">
+                        <span><span class="d-inline-block rounded-circle bg-warning me-1" style="width: 12px; height: 12px;"></span> Sahada</span>
+                        <span><span class="d-inline-block rounded-circle bg-success me-1" style="width: 12px; height: 12px;"></span> Tamamlandı</span>
+                        <span><span class="d-inline-block rounded-circle bg-info me-1" style="width: 12px; height: 12px;"></span> Yönlendirildi</span>
+                        <span><span class="d-inline-block rounded-circle bg-secondary me-1" style="width: 12px; height: 12px;"></span> Bekliyor</span>
+                    </div>
+                    <div class="card custom-card p-2 mb-4"><div id="mapContainer" style="height: 450px; width: 100%; border-radius: 12px; z-index: 1;"></div></div>
+                    <h5 class="fw-bold mb-3">Haritadaki Aktif Operasyonlar</h5>
+                    <div class="card custom-card">
+                        <div class="table-container">
+                            <table class="table table-hover align-middle mb-0" id="mapTaskTable">
+                                <thead class="table-light"><tr><th class="ps-4">ID</th><th>Görev Başlığı</th><th>Sorumlu Personel</th><th>Durum</th><th class="text-end pe-4">İşlem</th></tr></thead>
+                                <tbody id="mapTaskTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="directorates">
+                    <div class="d-flex justify-content-between align-items-end mb-4">
+                        <div><h4 class="fw-bold mb-1">Müdürlük Yönetimi</h4><span class="text-muted fs-6 d-block">Düzenlemek veya telefon numaralarını görmek için ilgili birime tıklayınız.</span></div>
+                    </div>
+                    <div class="card custom-card p-0">
+                        <div class="table-container" style="max-height: 700px;">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light"><tr><th class="ps-4">Müdürlük Adı</th><th>Birim Müdürü</th><th>Saha Şefi / Formen</th><th class="text-center">Aktif Personel</th><th class="text-end pe-4">Düzenle</th></tr></thead>
+                                <tbody id="directorateOrgTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="reports">
+                    <div class="d-flex justify-content-between align-items-end mb-4">
+                        <div><h4 class="fw-bold mb-1">Müdürlük Performans Raporları</h4><span class="text-muted fs-6 d-block">Tüm müdürlüklerin hizmet metrikleri ve SLA analizleri.</span></div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-danger bg-white shadow-sm" onclick="exportReport('PDF')"><i class="fa-solid fa-file-pdf me-2"></i>PDF Aktar</button>
+                            <button class="btn btn-outline-success bg-white shadow-sm" onclick="exportReport('Excel')"><i class="fa-solid fa-file-excel me-2"></i>Excel Aktar</button>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-7"><div class="card custom-card h-100"><div class="card-header bg-white border-0 pt-4 pb-0"><h6 class="fw-bold"><i class="fa-solid fa-ranking-star text-warning me-2"></i>En Yoğun Müdürlükler (Tamamlanan)</h6></div><div class="card-body" style="height: 350px;"><canvas id="horizontalBarChart"></canvas></div></div></div>
+                        <div class="col-md-5"><div class="card custom-card h-100"><div class="card-header bg-white border-0 pt-4 pb-0"><h6 class="fw-bold"><i class="fa-solid fa-chart-line text-success me-2"></i>Kurumsal SLA Trendi (%)</h6></div><div class="card-body" style="height: 350px;"><canvas id="lineChartSLA"></canvas></div></div></div>
+                    </div>
+                    <div class="card custom-card p-0">
+                        <div class="table-container">
+                            <table class="table table-hover align-middle mb-0 text-center">
+                                <thead class="table-light"><tr><th class="text-start ps-4">Müdürlük Adı</th><th>Toplam Görev</th><th class="text-success">Tamamlanan</th><th class="text-warning">İşlemde/Açık</th><th>Ort. Çözüm</th><th>SLA Başarısı</th></tr></thead>
+                                <tbody id="directorateTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="newTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light"><h5 class="modal-title fw-bold"><i class="fa-solid fa-clipboard-list text-primary me-2"></i>Yeni Görev Oluştur</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body p-4">
+                <form id="newTaskForm">
+                    <div class="mb-3"><label class="form-label fw-bold">Görev Başlığı</label><input type="text" class="form-control" id="taskInputTitle" required></div>
+                    <div class="row mb-3">
+                        <div class="col-md-6"><label class="form-label fw-bold">İlgili Birim</label><select class="form-select" id="taskInputUnit"></select></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Öncelik Derecesi</label><select class="form-select" id="taskInputPriority"><option value="Normal">Normal</option><option value="Yüksek">Yüksek</option><option value="Kritik" class="text-danger fw-bold">Kritik (Acil)</option></select></div>
+                    </div>
+                    <div class="mb-3"><label class="form-label fw-bold">Görev Konumu</label><input type="text" class="form-control" id="taskInputLocation" placeholder="Örn: Karacaibrahim Mahallesi" required></div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light border-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button><button type="button" class="btn btn-primary px-4" onclick="saveNewTask()"><i class="fa-solid fa-save me-2"></i>Kaydet</button></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="taskDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-white border-bottom-0 pb-0"><h6 class="modal-title text-muted fw-bold" id="detailModalTitle">Görev Detayı</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body p-4 pt-2">
+                <div class="row">
+                    <div class="col-md-7 border-end pe-4">
+                        <h4 class="fw-bold mb-2" id="detailTitle">Görev Başlığı</h4><p class="text-muted mb-3"><i class="fa-solid fa-location-dot me-2 text-danger"></i><span id="detailLocation">Konum</span></p>
+                        <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+                            <li class="nav-item"><button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#tab-desc" type="button">Açıklama</button></li>
+                            <li class="nav-item"><button class="nav-link fw-bold" id="photoTabBtn" data-bs-toggle="tab" data-bs-target="#tab-photos" type="button">Fotoğraflar</button></li>
+                            <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#tab-logs" type="button">Loglar</button></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="tab-desc"><p class="text-secondary">Sistem çağrı merkezi kaydı. Operasyon adımları Log sekmesinden takip edilebilir.</p></div>
+                            <div class="tab-pane fade" id="tab-photos"><div id="photoContent" class="row g-2"></div></div>
+                            <div class="tab-pane fade" id="tab-logs"><div class="mt-2" id="dynamicLogsContent"></div></div>
+                        </div>
+                    </div>
+                    <div class="col-md-5 ps-4">
+                        <h6 class="fw-bold mb-3 text-secondary">Sorumlu Personel / Ekip</h6>
+                        <div class="assignee-card d-flex align-items-center mb-4"><img src="" id="detailAvatar" class="rounded-circle me-3 shadow-sm" width="55"><div><h6 class="mb-0 fw-bold text-dark" id="detailAssignee">Sistem Yönlendirmesi</h6><small class="text-muted" id="detailRole">İlgili Birim</small></div></div>
+                        <h6 class="fw-bold mb-3 text-secondary">Durum</h6><span id="detailStatus" class="badge bg-warning text-dark px-3 py-2 fs-6 w-100 text-start">Sahada</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editDirModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light"><h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Müdürlük Düzenle</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body p-4">
+                <h5 class="fw-bold text-dark mb-4 border-bottom pb-2" id="editDirNameTitle">Müdürlük</h5><input type="hidden" id="editDirId">
+                <div class="row g-3 mb-3">
+                    <div class="col-12"><h6 class="fw-bold text-secondary mb-1">Birim Müdürü Bilgileri</h6></div>
+                    <div class="col-md-6"><label class="form-label" style="font-size: 0.85rem;">Ad Soyad</label><input type="text" class="form-control" id="editDirMudurName"></div>
+                    <div class="col-md-6"><label class="form-label" style="font-size: 0.85rem;">Telefon Numarası</label><div class="input-group"><span class="input-group-text"><i class="fa-solid fa-phone"></i></span><input type="text" class="form-control" id="editDirMudurPhone"></div></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12"><h6 class="fw-bold text-secondary mb-1 mt-2">Saha Şefi / Formen Bilgileri</h6></div>
+                    <div class="col-md-6"><label class="form-label" style="font-size: 0.85rem;">Ad Soyad</label><input type="text" class="form-control" id="editDirFormenName"></div>
+                    <div class="col-md-6"><label class="form-label" style="font-size: 0.85rem;">Telefon Numarası</label><div class="input-group"><span class="input-group-text"><i class="fa-solid fa-mobile-screen"></i></span><input type="text" class="form-control" id="editDirFormenPhone"></div></div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button><button type="button" class="btn btn-success px-4" onclick="saveDirChanges()"><i class="fa-solid fa-check me-2"></i>Kaydet</button></div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex"><div class="toast-body fw-bold" id="toastMessage"><i class="fa-solid fa-circle-check me-2"></i> İşlem Başarılı!</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    let directoratesData = [
+        { id: 1, name: "Fen İşleri", mudur: "Kemal Yılmaz", phoneM: "0532 111 2233", formen: "Ahmet Yılmaz", phoneF: "0533 222 3344", staff: 145 },
+        { id: 2, name: "Zabıta", mudur: "Hasan Çelik", phoneM: "0532 222 3344", formen: "Ayşe Kaya", phoneF: "0544 333 4455", staff: 80 },
+        { id: 3, name: "Park ve Bahçeler", mudur: "Elif Demir", phoneM: "0532 333 4455", formen: "Mehmet Demir", phoneF: "0555 444 5566", staff: 65 },
+        { id: 4, name: "Temizlik İşleri", mudur: "Mustafa Şen", phoneM: "0532 444 5566", formen: "Caner Erol", phoneF: "0532 555 6677", staff: 120 },
+        { id: 5, name: "Çevre Koruma", mudur: "Turan Koç", phoneM: "0532 555 6677", formen: "Oğuzhan Çelik", phoneF: "0533 666 7788", staff: 25 },
+        { id: 6, name: "Veteriner İşleri", mudur: "Burcu Aydın", phoneM: "0532 666 7788", formen: "Burak Yılmaz", phoneF: "0542 777 8899", staff: 18 },
+        { id: 7, name: "Kültür ve Sosyal", mudur: "Cemil Öz", phoneM: "0532 777 8899", formen: "Emre Can", phoneF: "0543 888 9900", staff: 22 },
+        { id: 8, name: "Ruhsat ve Denetim", mudur: "Fatma Gül", phoneM: "0532 888 9900", formen: "Orhan Veli", phoneF: "0544 999 0011", staff: 15 }
+    ];
+
+    // MATEMATİĞİ DÜZELTİLMİŞ GÖREV VERİLERİ (Atanma - Çıkış - Tamamlanma = Tam Dakika)
+    let mockTasks = [
+        { id: '#KRL-1051', title: 'Ana Şebeke Su Patlağı', unit: 'Fen İşleri', assignee: 'Ahmet Yılmaz', loc: 'Cumhuriyet Meydanı', statusText: 'Sahada', statusClass: 'bg-warning text-dark', prioClass: 'bg-danger', prioText: 'Kritik', lat: 41.7340, lng: 27.2225, photoCount: 2, img1: 'https://images.unsplash.com/photo-1584985390494-1a3b93fde0ab?auto=format&fit=crop&w=300&q=80', img2: 'https://images.unsplash.com/photo-1518281361980-b26bfd556770?auto=format&fit=crop&w=300&q=80', assignTime: '08:15', dispatchTime: '08:25', resolveTime: null, resolveMinutes: null },
+        { id: '#KRL-1050', title: 'Ağaç Devrilmesi', unit: 'Park ve Bahçeler', assignee: 'Mehmet Demir', loc: 'Yayla Mahallesi', statusText: 'Yönlendirildi', statusClass: 'bg-info text-dark', prioClass: 'bg-secondary', prioText: 'Normal', lat: 41.7375, lng: 27.2280, photoCount: 1, img1: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=300&q=80', assignTime: '09:10', dispatchTime: 'Bekleniyor', resolveTime: null, resolveMinutes: null },
+        
+        // 15 Dakika Mantığının Kurulduğu Görev
+        { id: '#KRL-1049', title: 'Kaldırım İşgali', unit: 'Zabıta', assignee: 'Ayşe Kaya', loc: 'İstasyon Caddesi', statusText: 'Tamamlandı', statusClass: 'bg-success', prioClass: 'bg-primary', prioText: 'Yüksek', lat: 41.7310, lng: 27.2260, photoCount: 0, assignTime: '08:30', dispatchTime: '08:35', resolveTime: '08:45', resolveMinutes: 15 },
+        
+        { id: '#KRL-1048', title: 'Yaralı Hayvan İhbarı', unit: 'Veteriner İşleri', assignee: 'Burak Yılmaz', loc: 'Karacaibrahim', statusText: 'Sahada', statusClass: 'bg-warning text-dark', prioClass: 'bg-primary', prioText: 'Yüksek', lat: 41.7405, lng: 27.2155, photoCount: 0, assignTime: '10:05', dispatchTime: '10:15', resolveTime: null, resolveMinutes: null },
+        
+        // Diğer düzeltilmiş süreler
+        { id: '#KRL-1047', title: 'Konteyner Hasarı', unit: 'Temizlik İşleri', assignee: 'Caner Erol', loc: 'İstiklal Cad.', statusText: 'Tamamlandı', statusClass: 'bg-success', prioClass: 'bg-secondary', prioText: 'Normal', lat: 41.7350, lng: 27.2200, photoCount: 0, assignTime: '07:20', dispatchTime: '07:30', resolveTime: '08:25', resolveMinutes: 65 },
+        
+        { id: '#KRL-1045', title: 'Dere Kirliliği', unit: 'Çevre Koruma', assignee: 'Oğuzhan Çelik', loc: 'Karahıdır', statusText: 'Yönlendirildi', statusClass: 'bg-info text-dark', prioClass: 'bg-secondary', prioText: 'Normal', lat: 41.7250, lng: 27.2400, photoCount: 0, assignTime: '11:00', dispatchTime: 'Bekleniyor', resolveTime: null, resolveMinutes: null },
+        
+        { id: '#KRL-1044', title: 'Festival Sahne Kurulumu', unit: 'Kültür ve Sosyal', assignee: 'Emre Can', loc: 'Festival Alanı', statusText: 'Tamamlandı', statusClass: 'bg-success', prioClass: 'bg-secondary', prioText: 'Normal', lat: 41.7380, lng: 27.2100, photoCount: 0, assignTime: '09:00', dispatchTime: '09:30', resolveTime: '13:00', resolveMinutes: 240 },
+        
+        { id: '#KRL-1043', title: 'Pazar Yeri Denetimi', unit: 'Ruhsat ve Denetim', assignee: 'Fatma Gül', loc: 'Kapalı Pazar Yeri', statusText: 'Tamamlandı', statusClass: 'bg-success', prioClass: 'bg-secondary', prioText: 'Normal', lat: 41.7300, lng: 27.2150, photoCount: 0, assignTime: '08:00', dispatchTime: '08:15', resolveTime: '09:30', resolveMinutes: 90 }
+    ];
+
+    function renderTasks(filterText = '') {
+        const mainTable = document.getElementById('mainTaskTableBody');
+        const mapTable = document.getElementById('mapTaskTableBody');
+        const resolvedTable = document.getElementById('resolvedTaskTableBody');
+        
+        mainTable.innerHTML = ''; mapTable.innerHTML = ''; resolvedTable.innerHTML = '';
+        const filteredTasks = mockTasks.filter(t => t.title.toLowerCase().includes(filterText) || t.id.toLowerCase().includes(filterText) || t.loc.toLowerCase().includes(filterText));
+        
+        if(filterText !== '') document.getElementById('searchResultText').innerText = `${filteredTasks.length} sonuç bulundu`;
+        else document.getElementById('searchResultText').innerText = '';
+
+        filteredTasks.forEach(task => {
+            let trMain = document.createElement('tr');
+            trMain.innerHTML = `<td class="ps-4 fw-bold text-primary">${task.id}</td><td><div class="fw-medium">${task.title}</div><small class="text-muted">${task.loc}</small></td><td>${task.unit}</td><td><span class="badge ${task.prioClass}">${task.prioText}</span></td><td><span class="badge ${task.statusClass}">${task.statusText}</span></td>`;
+            trMain.onclick = () => openTaskDetail(task);
+            mainTable.appendChild(trMain);
+
+            if(task.statusText !== 'Tamamlandı') {
+                let trMap = document.createElement('tr');
+                trMap.innerHTML = `<td class="ps-4 fw-bold text-primary">${task.id}</td><td class="fw-medium">${task.title}</td><td><img src="https://ui-avatars.com/api/?name=${task.assignee.replace(/ /g, '+')}&background=random&color=fff" class="rounded-circle me-2" width="30">${task.assignee}</td><td><span class="badge ${task.statusClass}">${task.statusText}</span></td><td class="text-end pe-4"><button class="btn btn-sm btn-light border"><i class="fa-solid fa-chevron-right"></i></button></td>`;
+                trMap.onclick = () => openTaskDetail(task);
+                mapTable.appendChild(trMap);
+            }
+
+            if(task.statusText === 'Tamamlandı') {
+                let trRes = document.createElement('tr');
+                let slaBadge = task.resolveMinutes <= 120 ? '<span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="fa-solid fa-check me-1"></i>Başarılı</span>' : '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Süre Aşıldı</span>';
+                
+                trRes.innerHTML = `
+                    <td class="text-start ps-4"><div class="fw-bold text-primary">${task.id}</div><small class="text-dark">${task.title}</small></td>
+                    <td><div class="fw-medium">${task.unit}</div><small class="text-muted">${task.assignee}</small></td>
+                    <td><span class="badge bg-light text-dark border"><i class="fa-regular fa-clock me-1 text-primary"></i>${task.assignTime}</span></td>
+                    <td><span class="badge bg-light text-dark border"><i class="fa-solid fa-truck-fast me-1 text-warning"></i>${task.dispatchTime}</span></td>
+                    <td><span class="badge bg-light text-dark border"><i class="fa-solid fa-check-double me-1 text-success"></i>${task.resolveTime}</span></td>
+                    <td class="fw-bold fs-5 text-dark">${task.resolveMinutes} <small class="text-muted fs-6 fw-normal">dk</small></td>
+                    <td>${slaBadge}</td>
+                `;
+                trRes.onclick = () => openTaskDetail(task);
+                resolvedTable.appendChild(trRes);
+            }
+        });
+    }
+
+    function renderDirectoratesAndReports() {
+        const orgTable = document.getElementById('directorateOrgTableBody');
+        const repBody = document.getElementById('directorateTableBody');
+        const formSelect = document.getElementById('taskInputUnit');
+        orgTable.innerHTML = ''; repBody.innerHTML = ''; formSelect.innerHTML = '';
+
+        directoratesData.forEach(dir => {
+            formSelect.innerHTML += `<option value="${dir.name}">${dir.name} Müdürlüğü</option>`;
+            let tr = document.createElement('tr');
+            tr.innerHTML = `<td class="ps-4 fw-bold text-dark">${dir.name} Müdürlüğü</td><td><img src="https://ui-avatars.com/api/?name=${dir.mudur.replace(/ /g, '+')}&background=f8f9fa&color=333" class="rounded-circle me-2 shadow-sm" width="35"><div><span class="d-block">${dir.mudur}</span><small class="text-muted"><i class="fa-solid fa-phone me-1"></i>${dir.phoneM}</small></div></td><td><img src="https://ui-avatars.com/api/?name=${dir.formen.replace(/ /g, '+')}&background=e2e8f0&color=333" class="rounded-circle me-2 shadow-sm" width="35"><div><span class="d-block">${dir.formen}</span><small class="text-muted"><i class="fa-solid fa-mobile-screen me-1"></i>${dir.phoneF}</small></div></td><td class="text-center"><span class="badge bg-light text-dark border"><i class="fa-solid fa-users me-1 text-primary"></i> ${dir.staff} Kişi</span></td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></button></td>`;
+            tr.onclick = () => openDirEditModal(dir.id);
+            orgTable.appendChild(tr);
+
+            let total = Math.floor(Math.random() * 200) + 10;
+            let completed = Math.floor(total * (Math.random() * 0.4 + 0.5));
+            let open = total - completed;
+            let slaRate = Math.floor((completed / total) * 100);
+            let slaBadge = slaRate >= 85 ? 'bg-success' : (slaRate >= 70 ? 'bg-warning text-dark' : 'bg-danger');
+            repBody.innerHTML += `<tr><td class="text-start ps-4 fw-medium">${dir.name}</td><td><b>${total}</b></td><td class="text-success fw-bold">${completed}</td><td class="text-warning text-dark fw-bold">${open}</td><td>${Math.floor(Math.random()*24)+2} Saat</td><td><span class="badge ${slaBadge}">${slaRate}%</span></td></tr>`;
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        renderTasks();
+        renderDirectoratesAndReports();
+        initCharts();
+        
+        document.getElementById('globalSearch').addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            renderTasks(val);
+            if(val.length > 0 && !document.getElementById('tasks').classList.contains('active')) {
+                var triggerEl = document.querySelector('#v-pills-tab button[data-bs-target="#tasks"]');
+                bootstrap.Tab.getInstance(triggerEl)?.show() || new bootstrap.Tab(triggerEl).show();
+            }
+        });
+    });
+
+    function openTaskDetail(task) {
+        document.getElementById('detailModalTitle').innerText = 'Görev Detayı: ' + task.id;
+        document.getElementById('detailTitle').innerText = task.title;
+        document.getElementById('detailAssignee').innerText = task.assignee;
+        document.getElementById('detailRole').innerText = task.unit;
+        document.getElementById('detailLocation').innerText = task.loc;
+        document.getElementById('detailAvatar').src = `https://ui-avatars.com/api/?name=${task.assignee.replace(/ /g, '+')}&background=random&color=fff`;
+        document.getElementById('detailStatus').className = 'badge px-3 py-2 fs-6 mb-3 w-100 text-start ' + task.statusClass;
+        document.getElementById('detailStatus').innerHTML = `<i class="fa-solid fa-circle-info me-2"></i>${task.statusText}`;
+        
+        document.getElementById('photoTabBtn').innerText = `Fotoğraflar (${task.photoCount})`;
+        const photoContent = document.getElementById('photoContent');
+        photoContent.innerHTML = task.photoCount === 0 ? `<div class="col-12"><div class="alert alert-secondary text-center"><i class="fa-solid fa-camera-rotate mb-2 fs-4 d-block"></i>Fotoğraf yüklenmemiştir.</div></div>` : (task.img1 ? `<div class="col-6"><img src="${task.img1}" class="img-fluid rounded border shadow-sm"></div>` : '') + (task.img2 ? `<div class="col-6"><img src="${task.img2}" class="img-fluid rounded border shadow-sm"></div>` : '');
+
+        let logsHTML = `<div class="timeline-log"><small class="text-muted fw-bold d-block">${task.assignTime}</small><span class="fs-6">Sistemden kayıt açıldı ve <strong>${task.unit}</strong> - <strong>${task.assignee}</strong> personeline atandı.</span></div>`;
+        if(task.dispatchTime !== 'Bekleniyor') {
+            logsHTML += `<div class="timeline-log"><small class="text-muted fw-bold d-block">${task.dispatchTime}</small><span class="fs-6">Ekip konuma intikal etmek üzere yola çıktı.</span></div>`;
+        }
+        if(task.statusText === 'Tamamlandı') { 
+            logsHTML += `<div class="timeline-log border-0"><small class="text-muted fw-bold d-block">${task.resolveTime} (Toplam ${task.resolveMinutes} Dk)</small><span class="fs-6 text-success fw-bold"><i class="fa-solid fa-check-double me-1"></i> Görev başarıyla çözümlendi ve kapatıldı.</span></div>`; 
+        } else { logsHTML = logsHTML.replace(/<div class="timeline-log">([\s\S]*?)<\/div>$/, '<div class="timeline-log border-0">$1</div>'); }
+        
+        document.getElementById('dynamicLogsContent').innerHTML = logsHTML;
+
+        var triggerEl = document.querySelector('#myTab button[data-bs-target="#tab-desc"]');
+        bootstrap.Tab.getInstance(triggerEl)?.show() || new bootstrap.Tab(triggerEl).show();
+        new bootstrap.Modal(document.getElementById('taskDetailModal')).show();
+    }
+
+    function openDirEditModal(id) {
+        let dir = directoratesData.find(d => d.id === id);
+        document.getElementById('editDirId').value = dir.id;
+        document.getElementById('editDirNameTitle').innerText = dir.name + " Müdürlüğü";
+        document.getElementById('editDirMudurName').value = dir.mudur;
+        document.getElementById('editDirMudurPhone').value = dir.phoneM;
+        document.getElementById('editDirFormenName').value = dir.formen;
+        document.getElementById('editDirFormenPhone').value = dir.phoneF;
+        new bootstrap.Modal(document.getElementById('editDirModal')).show();
+    }
+
+    function saveDirChanges() {
+        let id = parseInt(document.getElementById('editDirId').value);
+        let dir = directoratesData.find(d => d.id === id);
+        dir.mudur = document.getElementById('editDirMudurName').value;
+        dir.phoneM = document.getElementById('editDirMudurPhone').value;
+        dir.formen = document.getElementById('editDirFormenName').value;
+        dir.phoneF = document.getElementById('editDirFormenPhone').value;
+        renderDirectoratesAndReports();
+        bootstrap.Modal.getInstance(document.getElementById('editDirModal')).hide();
+        showToast("Müdürlük ve personel bilgileri güncellendi!");
+    }
+
+    let taskCounter = 1052;
+    function saveNewTask() {
+        const title = document.getElementById('taskInputTitle').value;
+        const unit = document.getElementById('taskInputUnit').value;
+        if(!title) { alert("Başlık girin!"); return; }
+        
+        let dirInfo = directoratesData.find(d => d.name === unit);
+        let assigneeName = dirInfo ? dirInfo.formen : 'Atama Bekliyor';
+        let now = new Date();
+        let timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+        const newTask = { id: `#KRL-${taskCounter}`, title: title, unit: unit, assignee: assigneeName, loc: document.getElementById('taskInputLocation').value, statusText: 'Bekliyor', statusClass: 'bg-secondary', prioClass: 'bg-secondary', prioText: 'Normal', photoCount: 0, lat: 41.7351 + (Math.random() - 0.5)*0.01, lng: 27.2252 + (Math.random() - 0.5)*0.01, assignTime: timeStr, dispatchTime: 'Bekleniyor', resolveTime: null, resolveMinutes: null };
+        
+        mockTasks.unshift(newTask);
+        renderTasks();
+        
+        if(mapInitialized) {
+            let icon = L.divIcon({ className: 'custom-map-icon', html: `<div class='status-pin pin-secondary'></div>`, iconSize: [20, 20], iconAnchor: [10, 10] });
+            L.marker([newTask.lat, newTask.lng], {icon: icon}).addTo(map).bindTooltip(`<b>${newTask.id}</b><br>${title}`).on('click', () => openTaskDetail(newTask));
+        }
+
+        document.getElementById('kpiOpenTasks').innerText = parseInt(document.getElementById('kpiOpenTasks').innerText) + 1;
+        bootstrap.Modal.getInstance(document.getElementById('newTaskModal')).hide();
+        document.getElementById('newTaskForm').reset();
+        showToast("Yeni görev eklendi ve " + assigneeName + " personeline atandı!");
+        taskCounter++;
+    }
+
+    function showToast(msg) {
+        document.getElementById('toastMessage').innerHTML = `<i class="fa-solid fa-circle-check me-2"></i> ${msg}`;
+        new bootstrap.Toast(document.getElementById('successToast')).show();
+    }
+    
+    function exportReport(type) { showToast(type + " Raporu hazırlanıyor, indirme başlayacak..."); }
+
+    let map, mapInitialized = false;
+    function initMap() {
+        if(mapInitialized) return;
+        map = L.map('mapContainer').setView([41.7351, 27.2252], 14); 
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        mockTasks.forEach(task => {
+            if (task.statusText !== 'Tamamlandı') {
+                let pinClass = 'pin-secondary'; 
+                if(task.statusText === 'Sahada') pinClass = 'pin-warning';
+                else if(task.statusText === 'Yönlendirildi') pinClass = 'pin-info';
+                let icon = L.divIcon({ className: 'custom-map-icon', html: `<div class='status-pin ${pinClass}'></div>`, iconSize: [20, 20], iconAnchor: [10, 10] });
+                L.marker([task.lat, task.lng], {icon: icon}).addTo(map).bindTooltip(`<b>${task.id}</b><br>${task.title}`).on('click', () => openTaskDetail(task));
+            }
+        });
+        mapInitialized = true;
+    }
+
+    document.querySelectorAll('button[data-bs-toggle="pill"]').forEach(btn => {
+        btn.addEventListener('shown.bs.tab', (e) => {
+            window.dispatchEvent(new Event('resize')); 
+            if(e.target.id === 'map-tab') { if(!mapInitialized) initMap(); else setTimeout(() => map.invalidateSize(), 100); }
+        });
+    });
+
+    function initCharts() {
+        Chart.defaults.font.family = "'Segoe UI', sans-serif";
+        new Chart(document.getElementById('barChart'), { type: 'bar', data: { labels: ['Fen İş.', 'Zabıta', 'Park', 'Temizlik', 'Bilgi İşlem'], datasets: [{ label: 'Görevler', data: [45, 30, 60, 85, 20], backgroundColor: '#3b82f6', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false } });
+        new Chart(document.getElementById('pieChart'), { type: 'doughnut', data: { labels: ['Malzeme', 'İzin', 'Hava', 'Diğer'], datasets: [{ data: [40, 20, 30, 10], backgroundColor: ['#ef4444', '#8b5cf6', '#64748b', '#cbd5e1'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%' } });
+        new Chart(document.getElementById('horizontalBarChart'), { type: 'bar', data: { labels: ['Fen İşleri', 'Temizlik İşleri', 'Park Bahçeler', 'Zabıta', 'Veteriner'], datasets: [{ label: 'Tamamlanan', data: [180, 165, 140, 110, 85], backgroundColor: '#10b981', borderRadius: 4 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+        new Chart(document.getElementById('lineChartSLA'), { type: 'line', data: { labels: ['Eyl', 'Eki', 'Kas', 'Ara', 'Oca', 'Şub'], datasets: [{ label: 'Kurumsal SLA (%)', data: [78, 81, 85, 82, 88, 92], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 3, fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 60, max: 100 } } } });
+    }
+</script>
+
+</body>
+</html>
