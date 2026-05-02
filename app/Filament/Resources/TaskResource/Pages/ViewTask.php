@@ -36,8 +36,16 @@ class ViewTask extends ViewRecord
                     /** @var Task $record */
                     $record = $this->getRecord();
 
+                    if ($record->latitude !== null && $record->longitude !== null) {
+                        return 'https://www.google.com/maps/dir/?api=1&destination='.rawurlencode(
+                            (string) $record->latitude.','.(string) $record->longitude,
+                        );
+                    }
+
+                    $location = trim((string) $record->location);
+
                     return 'https://www.google.com/maps/dir/?api=1&destination='.rawurlencode(
-                        (string) $record->latitude.','.(string) $record->longitude,
+                        $location !== '' ? $location : 'Kırklareli',
                     );
                 })
                 ->openUrlInNewTab()
@@ -45,7 +53,11 @@ class ViewTask extends ViewRecord
                     /** @var Task $record */
                     $record = $this->getRecord();
 
-                    return $record->latitude !== null && $record->longitude !== null;
+                    if ($record->latitude !== null && $record->longitude !== null) {
+                        return true;
+                    }
+
+                    return filled(trim((string) $record->location));
                 }),
             Actions\Action::make('completeOnSite')
                 ->label('Görevi tamamla')

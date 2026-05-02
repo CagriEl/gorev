@@ -59,15 +59,29 @@ class BelSystemSeeder extends Seeder
             ],
         );
 
-        User::query()->updateOrCreate(
+        $fenForeman = User::query()->updateOrCreate(
             ['email' => 'saha@kirklareli.bel.tr'],
             [
-                'name' => 'Saha Personeli',
+                'name' => 'Fen İşleri Saha Şefi',
                 'password' => Hash::make('password'),
                 'role' => UserRole::Staff,
                 'department_id' => $fen->id,
                 'email_verified_at' => now(),
             ],
         );
+
+        $temizlikForeman = User::query()->updateOrCreate(
+            ['email' => 'saha.temizlik@kirklareli.bel.tr'],
+            [
+                'name' => 'Temizlik Saha Şefi',
+                'password' => Hash::make('password'),
+                'role' => UserRole::Staff,
+                'department_id' => $temizlik->id,
+                'email_verified_at' => now(),
+            ],
+        );
+
+        $fen->update(['foreman_user_id' => $fenForeman->id]);
+        $temizlik->update(['foreman_user_id' => $temizlikForeman->id]);
     }
 }

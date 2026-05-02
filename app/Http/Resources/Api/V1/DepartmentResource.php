@@ -20,6 +20,11 @@ class DepartmentResource extends JsonResource
             'manager_phone' => $this->manager_phone,
             'foreman_name' => $this->foreman_name,
             'foreman_phone' => $this->foreman_phone,
+            'foreman_user_id' => $this->foreman_user_id,
+            'foreman_user' => [
+                'id' => $this->foreman_user_id,
+                'name' => $this->foremanUser?->name,
+            ],
             'staff_count' => $this->staff_count,
             'created_at' => optional($this->created_at)?->toIso8601String(),
             'updated_at' => optional($this->updated_at)?->toIso8601String(),

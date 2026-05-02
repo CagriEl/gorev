@@ -61,14 +61,14 @@
                 const lng = this.readCoord('data.longitude');
                 if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
                     this.notify(
-                        'Geçersiz koordinat',
-                        'Enlem −90 ile 90, boylam −180 ile 180 arasında sayı olmalıdır. Alanları kontrol edin.',
+                        'Konum seçilmedi',
+                        'Haritadan bir nokta seçin veya «Şu anki konumumu getir» kullanın.',
                         'warning',
                     );
                     return;
                 }
                 if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-                    this.notify('Koordinat aralığı dışında', 'Enlem veya boylam izin verilen aralığın dışında.', 'warning');
+                    this.notify('Geçersiz konum', 'Harita üzerinde izin verilen bölge dışında bir nokta algılandı.', 'warning');
                     return;
                 }
                 this.marker.setLatLng([lat, lng]);
@@ -192,7 +192,7 @@
                         this.marker.setLatLng(ll);
                         this.map.setView([ll.lat, ll.lng], 16);
                         this.syncToForm(ll);
-                        this.notify('Konum alındı', 'Harita ve koordinat alanları güncellendi.', 'success');
+                        this.notify('Konum alındı', 'Harita görev noktası olarak güncellendi.', 'success');
                     },
                     (err) => {
                         let title = 'Konum alınamadı';

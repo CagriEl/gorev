@@ -16,7 +16,6 @@
             initialLng: {{ number_format($lng, 7, '.', '') }},
         })"
         x-init="init()"
-        @leaflet-sync-from-form.window="syncFromForm()"
         class="w-full space-y-3"
     >
         <div class="flex flex-wrap items-center gap-2">
@@ -40,7 +39,7 @@
         ></div>
 
         <p class="text-sm text-gray-500 dark:text-gray-400">
-            Haritaya tıklayın veya işareti sürükleyin; koordinatlar yukarıdaki alanlara yazılır. Elle girdiğiniz değerleri haritaya yansıtmak için alan dışına tıklayın.
+            İsteğe bağlı: haritaya tıklayın veya işareti sürükleyerek görev noktasını işaretleyin; yol tarifi ve saha doğrulaması için kullanılır. Ayrıca «Şu anki konumumu getir» ile bulunduğunuz yeri işaretleyebilirsiniz.
         </p>
     </div>
 </x-dynamic-component>

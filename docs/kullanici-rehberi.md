@@ -23,12 +23,12 @@ Bu rehber saha personeli, birim yöneticisi ve operasyon kullanıcıları için 
 `Görevler > Yeni görev` ekranında:
 
 - Başlık, müdürlük, öncelik ve durum girin.
-- Konum için adres veya enlem/boylam girin.
-- Gerekirse haritadan konum seçin.
+- Müdürlük seçildiğinde **atanan** alanında o müdürlükte tanımlı **saha şefi kullanıcısı** otomatik gelir (Müdürlükler kaydında «Saha şefi kullanıcısı» atanmış olmalıdır).
+- Konum için adres metnini girin; isteğe bağlı olarak haritadan nokta işaretleyin veya «Şu anki konumumu getir» ile konumu kaydedin (yol tarifi ve saha doğrulaması için).
 
 ## 3.2 Görev Güncelleme
 
-- Durum, atanan personel, zaman ve açıklama alanlarını güncelleyebilirsiniz.
+- Durum, zaman ve açıklama alanlarını güncelleyebilirsiniz; atanan kişi her zaman ilgili müdürlüğün saha şefi kullanıcısıdır.
 - Durum geçişleri sistem kurallarına göre kontrol edilir.
 
 ## 3.3 Kapanış Bilgileri

@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\TaskResource;
+use App\Models\Department;
 use App\Models\Task;
 use App\Support\ReportScope;
+use App\Support\TaskForemanAssignee;
 use App\Support\TaskWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -53,6 +55,10 @@ class TaskController extends Controller
             'resolved_at' => ['nullable', 'date'],
         ]);
 
+        $department = Department::query()->findOrFail($validated['department_id']);
+        $incomingAssignee = $validated['assignee_id'] ?? null;
+        $validated = TaskForemanAssignee::applyForDepartment($validated, $department, $incomingAssignee);
+
         $validated['task_code'] = Task::generateTaskCode();
         TaskWorkflow::assertRequiredFields($validated);
         $task = Task::query()->create($validated);
@@ -86,6 +92,20 @@ class TaskController extends Controller
             $to = TaskStatus::from($validated['status']);
             TaskWorkflow::assertTransition($task->status, $to);
         }
+
+        if (array_key_exists('department_id', $validated) || array_key_exists('assignee_id', $validated)) {
+            $deptId = (int) ($validated['department_id'] ?? $task->department_id);
+            $department = Department::query()->findOrFail($deptId);
+            if (array_key_exists('department_id', $validated) && ! array_key_exists('assignee_id', $validated)) {
+                $incomingAssignee = null;
+            } elseif (array_key_exists('assignee_id', $validated)) {
+                $incomingAssignee = $validated['assignee_id'];
+            } else {
+                $incomingAssignee = $task->assignee_id;
+            }
+            $validated = TaskForemanAssignee::applyForDepartment($validated, $department, $incomingAssignee);
+        }
+
         TaskWorkflow::assertRequiredFields($validated, $task);
         $task->update($validated);
 

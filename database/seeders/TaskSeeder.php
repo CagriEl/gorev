@@ -6,7 +6,6 @@ use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Models\Department;
 use App\Models\Task;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 
 /**
@@ -18,15 +17,14 @@ class TaskSeeder extends Seeder
     {
         $fen = Department::query()->where('name', 'Fen İşleri Müdürlüğü')->first();
         $temizlik = Department::query()->where('name', 'Temizlik İşleri Müdürlüğü')->first();
-        $staff = User::query()->where('email', 'saha@kirklareli.bel.tr')->first();
-
         if ($fen === null || $temizlik === null) {
             $this->command?->warn('TaskSeeder: Önce BelSystemSeeder çalıştırılmalı (müdürlük kayıtları yok).');
 
             return;
         }
 
-        $assigneeId = $staff?->id;
+        $fen->refresh();
+        $temizlik->refresh();
 
         $rows = [
             [
@@ -107,6 +105,11 @@ class TaskSeeder extends Seeder
         ];
 
         foreach ($rows as $row) {
+            $departmentId = (int) $row['department_id'];
+            $assigneeId = $departmentId === (int) $fen->id
+                ? $fen->foreman_user_id
+                : $temizlik->foreman_user_id;
+
             Task::query()->updateOrCreate(
                 ['task_code' => $row['task_code']],
                 array_merge($row, ['assignee_id' => $assigneeId]),

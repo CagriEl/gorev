@@ -4,6 +4,7 @@ namespace App\Filament\Resources\TaskResource\Pages;
 
 use App\Enums\TaskStatus;
 use App\Filament\Resources\TaskResource;
+use App\Support\TaskForemanAssignee;
 use App\Support\TaskWorkflow;
 use Carbon\Carbon;
 use Filament\Actions;
@@ -12,6 +13,15 @@ use Filament\Resources\Pages\EditRecord;
 class EditTask extends EditRecord
 {
     protected static string $resource = TaskResource::class;
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        return TaskForemanAssignee::syncFromDepartment($data);
+    }
 
     protected function getHeaderActions(): array
     {
@@ -23,6 +33,8 @@ class EditTask extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $data = TaskForemanAssignee::syncFromDepartment($data);
+
         $oldStatus = $this->record->status;
         $newStatus = TaskStatus::tryFrom((string) ($data['status'] ?? ''));
         if ($newStatus) {

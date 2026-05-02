@@ -5,8 +5,9 @@ namespace App\Filament\Resources\TaskResource\Pages;
 use App\Enums\TaskStatus;
 use App\Filament\Resources\TaskResource;
 use App\Models\Task;
-use Carbon\Carbon;
+use App\Support\TaskForemanAssignee;
 use App\Support\TaskWorkflow;
+use Carbon\Carbon;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateTask extends CreateRecord
@@ -16,6 +17,7 @@ class CreateTask extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['task_code'] = Task::generateTaskCode();
+        $data = TaskForemanAssignee::syncFromDepartment($data);
         TaskWorkflow::assertRequiredFields($data);
 
         return $this->resolveMinutes($data);

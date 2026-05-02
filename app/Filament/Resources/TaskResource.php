@@ -6,11 +6,13 @@ use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Enums\UserRole;
 use App\Filament\Resources\TaskResource\Pages;
+use App\Models\Department;
 use App\Models\Task;
+use App\Models\User;
 use Filament\Forms;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
@@ -64,48 +66,54 @@ class TaskResource extends Resource
                             )
                             ->required()
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->live()
+                            ->afterStateUpdated(function ($state, Set $set): void {
+                                if ($state === null || $state === '') {
+                                    $set('assignee_id', null);
+
+                                    return;
+                                }
+                                $foremanId = Department::query()
+                                    ->whereKey((string) $state)
+                                    ->value('foreman_user_id');
+                                $set('assignee_id', $foremanId);
+                            }),
                         Forms\Components\Select::make('assignee_id')
-                            ->label('Atanan personel')
-                            ->relationship(
-                                'assignee',
-                                'name',
-                                modifyQueryUsing: function (Builder $query) {
-                                    $query->where('role', UserRole::Staff);
-                                },
-                            )
-                            ->searchable()
+                            ->label('Atanan (saha şefi)')
+                            ->helperText('Müdürlük seçildiğinde otomatik olarak tanımlı saha şefi kullanıcısı atanır.')
+                            ->options(function (Get $get): array {
+                                $deptId = $get('department_id');
+                                if ($deptId === null || $deptId === '') {
+                                    return [];
+                                }
+                                $foremanId = Department::query()
+                                    ->whereKey((string) $deptId)
+                                    ->value('foreman_user_id');
+                                if (! $foremanId) {
+                                    return [];
+                                }
+                                $name = User::query()->whereKey($foremanId)->value('name');
+
+                                return $name ? [(int) $foremanId => (string) $name] : [];
+                            })
+                            ->searchable(false)
                             ->preload()
                             ->nullable(),
                         Forms\Components\TextInput::make('location')
                             ->label('Adres / konum')
                             ->maxLength(255),
-                        Grid::make(2)
-                            ->schema([
-                                Forms\Components\TextInput::make('latitude')
-                                    ->label('Enlem')
-                                    ->numeric()
-                                    ->step(0.0000001)
-                                    ->rule('required_with:longitude')
-                                    ->rules(['nullable', 'numeric', 'between:-90,90'])
-                                    ->validationMessages([
-                                        'required_with' => 'Boylam girildiğinde enlem de zorunludur.',
-                                        'numeric' => 'Enlem sayısal bir değer olmalıdır.',
-                                        'between' => 'Enlem −90 ile 90 derece arasında olmalıdır.',
-                                    ])
-                                    ->extraInputAttributes(['x-on:blur' => '$dispatch(\'leaflet-sync-from-form\')']),
-                                Forms\Components\TextInput::make('longitude')
-                                    ->label('Boylam')
-                                    ->numeric()
-                                    ->step(0.0000001)
-                                    ->rule('required_with:latitude')
-                                    ->rules(['nullable', 'numeric', 'between:-180,180'])
-                                    ->validationMessages([
-                                        'required_with' => 'Enlem girildiğinde boylam da zorunludur.',
-                                        'numeric' => 'Boylam sayısal bir değer olmalıdır.',
-                                        'between' => 'Boylam −180 ile 180 derece arasında olmalıdır.',
-                                    ])
-                                    ->extraInputAttributes(['x-on:blur' => '$dispatch(\'leaflet-sync-from-form\')']),
+                        Forms\Components\Hidden::make('latitude')
+                            ->rules(['nullable', 'numeric', 'between:-90,90'])
+                            ->validationMessages([
+                                'numeric' => 'Enlem sayısal bir değer olmalıdır.',
+                                'between' => 'Enlem −90 ile 90 derece arasında olmalıdır.',
+                            ]),
+                        Forms\Components\Hidden::make('longitude')
+                            ->rules(['nullable', 'numeric', 'between:-180,180'])
+                            ->validationMessages([
+                                'numeric' => 'Boylam sayısal bir değer olmalıdır.',
+                                'between' => 'Boylam −180 ile 180 derece arasında olmalıdır.',
                             ]),
                         Forms\Components\ViewField::make('location_map')
                             ->view('filament.forms.components.leaflet-location-picker')

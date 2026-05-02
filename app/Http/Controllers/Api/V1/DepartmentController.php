@@ -16,7 +16,7 @@ class DepartmentController extends Controller
 
         return DepartmentResource::collection(
             ReportScope::scopedDepartmentQuery()
-                ->with('viceMayor:id,name')
+                ->with(['viceMayor:id,name', 'foremanUser:id,name'])
                 ->orderBy('name')
                 ->paginate(25),
         );
@@ -26,6 +26,6 @@ class DepartmentController extends Controller
     {
         $this->authorize('view', $department);
 
-        return new DepartmentResource($department->load('viceMayor:id,name'));
+        return new DepartmentResource($department->load(['viceMayor:id,name', 'foremanUser:id,name']));
     }
 }

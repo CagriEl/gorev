@@ -63,8 +63,8 @@ Roller:
 
 Başlıca alanlar:
 
-- Görev kodu, başlık, müdürlük, atanan personel
-- Harita koordinatı (enlem/boylam) ve adres
+- Görev kodu, başlık, müdürlük; atanan kişi ilgili müdürlükte tanımlı saha şefi kullanıcısıdır
+- Adres metni ve isteğe bağlı harita üzerinden görev noktası
 - Öncelik, durum, açıklama
 - Çözüm notu ve kanıt fotoğrafları
 - Atanma/sahaya çıkış/tamamlanma zamanları

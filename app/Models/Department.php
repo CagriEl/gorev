@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\Contracts\Activity;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -18,6 +18,7 @@ class Department extends Model
     protected $fillable = [
         'name',
         'vice_mayor_id',
+        'foreman_user_id',
         'manager_name',
         'manager_phone',
         'foreman_name',
@@ -37,6 +38,11 @@ class Department extends Model
         return $this->belongsTo(User::class, 'vice_mayor_id');
     }
 
+    public function foremanUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'foreman_user_id');
+    }
+
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
@@ -53,6 +59,7 @@ class Department extends Model
             ->logOnly([
                 'name',
                 'vice_mayor_id',
+                'foreman_user_id',
                 'manager_name',
                 'manager_phone',
                 'foreman_name',

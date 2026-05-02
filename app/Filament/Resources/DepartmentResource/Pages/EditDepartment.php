@@ -4,9 +4,11 @@ namespace App\Filament\Resources\DepartmentResource\Pages;
 
 use App\Filament\Resources\DepartmentResource;
 use App\Models\ApprovalRequest;
+use App\Models\User;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Validation\ValidationException;
 
 class EditDepartment extends EditRecord
 {
@@ -21,6 +23,16 @@ class EditDepartment extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $foremanId = $data['foreman_user_id'] ?? null;
+        if ($foremanId) {
+            $foreman = User::query()->find($foremanId);
+            if (! $foreman || (int) $foreman->department_id !== (int) $this->record->id) {
+                throw ValidationException::withMessages([
+                    'foreman_user_id' => 'Saha şefi kullanıcısı bu müdürlüğe bağlı olmalıdır.',
+                ]);
+            }
+        }
+
         $user = auth()->user();
         if (($data['vice_mayor_id'] ?? null) !== $this->record->vice_mayor_id && ! $user?->isAdmin()) {
             ApprovalRequest::query()->create([

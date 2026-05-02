@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Enums\UserRole;
 use App\Filament\Resources\DepartmentResource\Pages;
 use App\Models\Department;
+use App\Models\User;
 use App\Support\Masking;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -62,6 +63,23 @@ class DepartmentResource extends Resource
                             ->label('Saha şefi telefon')
                             ->tel()
                             ->maxLength(50),
+                        Forms\Components\Select::make('foreman_user_id')
+                            ->label('Saha şefi kullanıcısı')
+                            ->helperText('Bu müdürlüğe bağlı panel kullanıcısı; görevler bu kişiye atanır.')
+                            ->options(function ($livewire): array {
+                                $record = $livewire->getRecord();
+                                if (! $record instanceof Department || ! $record->exists) {
+                                    return [];
+                                }
+
+                                return User::query()
+                                    ->where('department_id', $record->id)
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id')
+                                    ->all();
+                            })
+                            ->searchable()
+                            ->nullable(),
                         Forms\Components\TextInput::make('staff_count')
                             ->label('Personel sayısı')
                             ->numeric()
@@ -95,8 +113,12 @@ class DepartmentResource extends Resource
                         return Masking::phone($record->manager_phone);
                     })
                     ->wrap(),
+                Tables\Columns\TextColumn::make('foremanUser.name')
+                    ->label('Saha şefi (hesap)')
+                    ->placeholder('—')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('foreman_name')
-                    ->label('Saha şefi')
+                    ->label('Saha şefi (iletişim)')
                     ->description(function (Department $record): ?string {
                         $user = auth()->user();
                         if ($user?->isAdmin() || $user?->isViceMayor()) {
@@ -156,7 +178,7 @@ class DepartmentResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()->with('foremanUser:id,name');
         $user = auth()->user();
         if ($user?->role === UserRole::ViceMayor) {
             $query->where('vice_mayor_id', $user->id);
