@@ -12,7 +12,7 @@ class ViceMayorStatusDoughnutChart extends ChartWidget
 
     protected static ?string $heading = 'Görev durum dağılımı';
 
-    protected static ?string $description = 'Bekliyor, yönlendirildi, sahada ve tamamlandı';
+    protected static ?string $description = 'Bekliyor, yönlendirildi, sahada, onay bekleyen ve kapatılan';
 
     protected static ?string $maxHeight = '360px';
 
@@ -34,18 +34,22 @@ class ViceMayorStatusDoughnutChart extends ChartWidget
         $sahada = (int) ReportScope::scopedTaskQuery()
             ->where('status', TaskStatus::Sahada)
             ->count();
-        $tamamlandi = (int) ReportScope::scopedTaskQuery()
-            ->where('status', TaskStatus::Tamamlandi)
+        $onayBekliyor = (int) ReportScope::scopedTaskQuery()
+            ->where('status', TaskStatus::OnayBekliyor)
+            ->count();
+        $kapatildi = (int) ReportScope::scopedTaskQuery()
+            ->whereIn('status', [TaskStatus::Kapatildi, TaskStatus::Tamamlandi])
             ->count();
 
         return [
             'datasets' => [
                 [
-                    'data' => [$bekliyor, $yonlendirildi, $sahada, $tamamlandi],
+                    'data' => [$bekliyor, $yonlendirildi, $sahada, $onayBekliyor, $kapatildi],
                     'backgroundColor' => [
                         '#64748b',
                         '#8b5cf6',
                         '#ef4444',
+                        '#f59e0b',
                         '#10b981',
                     ],
                     'borderWidth' => 0,
@@ -55,7 +59,8 @@ class ViceMayorStatusDoughnutChart extends ChartWidget
                 TaskStatus::Bekliyor->getLabel(),
                 TaskStatus::Yonlendirildi->getLabel(),
                 TaskStatus::Sahada->getLabel(),
-                TaskStatus::Tamamlandi->getLabel(),
+                TaskStatus::OnayBekliyor->getLabel(),
+                TaskStatus::Kapatildi->getLabel(),
             ],
         ];
     }

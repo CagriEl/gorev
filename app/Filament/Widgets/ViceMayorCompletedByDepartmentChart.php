@@ -47,7 +47,7 @@ class ViceMayorCompletedByDepartmentChart extends ChartWidget
         $data = $departments->map(function (Department $department): int {
             return (int) ReportScope::scopedTaskQuery()
                 ->where('department_id', $department->id)
-                ->where('status', TaskStatus::Tamamlandi)
+                ->whereIn('status', [TaskStatus::Tamamlandi, TaskStatus::Kapatildi])
                 ->count();
         })->all();
 

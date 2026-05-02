@@ -6,6 +6,7 @@ use App\Enums\TaskStatus;
 use App\Filament\Resources\TaskResource;
 use App\Models\Task;
 use Carbon\Carbon;
+use App\Support\TaskWorkflow;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateTask extends CreateRecord
@@ -15,6 +16,7 @@ class CreateTask extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['task_code'] = Task::generateTaskCode();
+        TaskWorkflow::assertRequiredFields($data);
 
         return $this->resolveMinutes($data);
     }
@@ -25,7 +27,12 @@ class CreateTask extends CreateRecord
      */
     protected function resolveMinutes(array $data): array
     {
-        if (($data['status'] ?? null) === TaskStatus::Tamamlandi->value
+        if (in_array(($data['status'] ?? null), [
+            TaskStatus::Tamamlandi->value,
+            TaskStatus::Cozuldu->value,
+            TaskStatus::OnayBekliyor->value,
+            TaskStatus::Kapatildi->value,
+        ], true)
             && filled($data['assigned_at'] ?? null)
             && filled($data['resolved_at'] ?? null)) {
             $data['resolve_minutes'] = (int) Carbon::parse($data['assigned_at'])

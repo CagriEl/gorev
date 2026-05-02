@@ -1,0 +1,83 @@
+openapi: 3.0.3
+info:
+  title: Bel-Sistem API
+  version: "1.0.0"
+servers:
+  - url: /api/v1
+paths:
+  /auth/token:
+    post:
+      summary: Token al
+  /me:
+    get:
+      summary: Aktif kullanıcı bilgisi
+      security:
+        - bearerAuth: []
+  /tasks:
+    get:
+      summary: Görev listesi
+      security:
+        - bearerAuth: []
+    post:
+      summary: Görev oluştur
+      security:
+        - bearerAuth: []
+  /tasks/{id}:
+    get:
+      summary: Görev detayı
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+    patch:
+      summary: Görev güncelle
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+  /departments:
+    get:
+      summary: Müdürlük listesi
+      security:
+        - bearerAuth: []
+  /users:
+    get:
+      summary: Kullanıcı listesi
+      security:
+        - bearerAuth: []
+  /approval-requests:
+    get:
+      summary: Onay talebi listesi
+      security:
+        - bearerAuth: []
+  /approval-requests/{id}/approve:
+    post:
+      summary: Onay talebini onayla
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+  /approval-requests/{id}/reject:
+    post:
+      summary: Onay talebini reddet
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

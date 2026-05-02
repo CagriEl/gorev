@@ -5,9 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Activitylog\Contracts\Activity;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Department extends Model
 {
+    use HasFactory;
+    use LogsActivity;
+
     protected $fillable = [
         'name',
         'vice_mayor_id',
@@ -38,5 +45,34 @@ class Department extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'name',
+                'vice_mayor_id',
+                'manager_name',
+                'manager_phone',
+                'foreman_name',
+                'foreman_phone',
+                'staff_count',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('department');
+    }
+
+    public function tapActivity(Activity $activity, string $eventName): void
+    {
+        $activity->properties = $activity->properties->merge([
+            'event' => $eventName,
+            'request_context' => [
+                'ip' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+                'route' => request()->path(),
+            ],
+        ]);
     }
 }

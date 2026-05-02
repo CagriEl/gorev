@@ -14,6 +14,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(BelSystemSeeder::class);
+        $this->call([
+            BelSystemSeeder::class,
+            TaskSeeder::class,
+            ApprovalRequestSeeder::class,
+        ]);
     }
 }

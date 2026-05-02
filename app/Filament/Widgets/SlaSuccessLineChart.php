@@ -36,7 +36,7 @@ class SlaSuccessLineChart extends ChartWidget
             $labels[] = $month->translatedFormat('M Y');
 
             $tasks = ReportScope::scopedTaskQuery()
-                ->where('status', TaskStatus::Tamamlandi)
+                ->whereIn('status', [TaskStatus::Tamamlandi, TaskStatus::Kapatildi])
                 ->whereYear('resolved_at', $month->year)
                 ->whereMonth('resolved_at', $month->month)
                 ->get();

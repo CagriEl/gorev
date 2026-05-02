@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Enums\UserRole;
 use App\Filament\Resources\DepartmentResource\Pages;
 use App\Models\Department;
+use App\Support\Masking;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -85,11 +86,25 @@ class DepartmentResource extends Resource
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('manager_name')
                     ->label('Birim müdürü')
-                    ->description(fn (Department $record): ?string => $record->manager_phone)
+                    ->description(function (Department $record): ?string {
+                        $user = auth()->user();
+                        if ($user?->isAdmin() || $user?->isViceMayor()) {
+                            return $record->manager_phone;
+                        }
+
+                        return Masking::phone($record->manager_phone);
+                    })
                     ->wrap(),
                 Tables\Columns\TextColumn::make('foreman_name')
                     ->label('Saha şefi')
-                    ->description(fn (Department $record): ?string => $record->foreman_phone)
+                    ->description(function (Department $record): ?string {
+                        $user = auth()->user();
+                        if ($user?->isAdmin() || $user?->isViceMayor()) {
+                            return $record->foreman_phone;
+                        }
+
+                        return Masking::phone($record->foreman_phone);
+                    })
                     ->wrap(),
                 Tables\Columns\TextColumn::make('staff_count')
                     ->label('Personel')
@@ -101,11 +116,13 @@ class DepartmentResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn (Department $record): bool => auth()->user()?->can('update', $record) ?? false),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(fn (): bool => auth()->user()?->isAdmin() ?? false),
                 ]),
             ]);
     }
@@ -146,5 +163,15 @@ class DepartmentResource extends Resource
         }
 
         return $query;
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('viewAny', Department::class) ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
     }
 }

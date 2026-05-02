@@ -25,7 +25,12 @@ class ListTasks extends ListRecords
         return [
             'all' => Tab::make('Tüm görevler'),
             'resolved' => Tab::make('Çözümlenen görevler')
-                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', TaskStatus::Tamamlandi)),
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->whereIn('status', [
+                    TaskStatus::Cozuldu,
+                    TaskStatus::OnayBekliyor,
+                    TaskStatus::Kapatildi,
+                    TaskStatus::Tamamlandi,
+                ])),
         ];
     }
 }

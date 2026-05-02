@@ -5,11 +5,13 @@ namespace App\Filament\Resources;
 use App\Enums\UserRole;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use App\Support\Masking;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class UserResource extends Resource
@@ -53,7 +55,16 @@ class UserResource extends Resource
                             ->maxLength(255),
                         Forms\Components\Select::make('role')
                             ->label('Rol')
-                            ->options(UserRole::class)
+                            ->options(function (): array {
+                                $user = auth()->user();
+                                if ($user?->isAdmin()) {
+                                    return collect(UserRole::cases())->mapWithKeys(
+                                        fn (UserRole $role): array => [$role->value => (string) $role->getLabel()],
+                                    )->all();
+                                }
+
+                                return [UserRole::Staff->value => (string) UserRole::Staff->getLabel()];
+                            })
                             ->required()
                             ->native(false),
                         Forms\Components\Select::make('department_id')
@@ -77,6 +88,14 @@ class UserResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('email')
                     ->label('E-posta')
+                    ->formatStateUsing(function (?string $state): string {
+                        $user = auth()->user();
+                        if ($user?->isAdmin()) {
+                            return (string) $state;
+                        }
+
+                        return Masking::email($state);
+                    })
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('role')
@@ -102,11 +121,13 @@ class UserResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn (User $record): bool => auth()->user()?->can('update', $record) ?? false),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(fn (): bool => auth()->user()?->isAdmin() ?? false),
                 ]),
             ]);
     }
@@ -136,5 +157,39 @@ class UserResource extends Resource
         return [
             'E-posta' => $record->email,
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('viewAny', User::class) ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('create', User::class) ?? false;
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+        if (! $user) {
+            return $query->whereRaw('1 = 0');
+        }
+        if ($user->isAdmin()) {
+            return $query;
+        }
+        if ($user->isViceMayor()) {
+            return $query
+                ->whereIn('department_id', $user->managedDepartmentIds())
+                ->where('role', '!=', UserRole::Admin->value);
+        }
+        if ($user->isManager() && $user->department_id) {
+            return $query
+                ->where('department_id', $user->department_id)
+                ->where('role', UserRole::Staff->value);
+        }
+
+        return $query->whereKey($user->id);
     }
 }

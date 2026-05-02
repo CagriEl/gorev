@@ -18,7 +18,7 @@ class BelStatsOverview extends BaseWidget
             Stat::make(
                 'Açık görevler',
                 (string) ReportScope::scopedTaskQuery()
-                    ->where('status', '!=', TaskStatus::Tamamlandi)
+                    ->whereNotIn('status', [TaskStatus::Tamamlandi, TaskStatus::Kapatildi])
                     ->count(),
             )
                 ->description('Tamamlanmamış tüm görevler')
@@ -27,7 +27,7 @@ class BelStatsOverview extends BaseWidget
                 'Acil müdahale',
                 (string) ReportScope::scopedTaskQuery()
                     ->where('priority', TaskPriority::Kritik)
-                    ->where('status', '!=', TaskStatus::Tamamlandi)
+                    ->whereNotIn('status', [TaskStatus::Tamamlandi, TaskStatus::Kapatildi])
                     ->count(),
             )
                 ->description('Kritik öncelikli açık görevler')
@@ -35,7 +35,7 @@ class BelStatsOverview extends BaseWidget
             Stat::make(
                 'Çözülen görevler',
                 (string) ReportScope::scopedTaskQuery()
-                    ->where('status', TaskStatus::Tamamlandi)
+                    ->whereIn('status', [TaskStatus::Tamamlandi, TaskStatus::Kapatildi])
                     ->count(),
             )
                 ->description('Tamamlanan görevler')

@@ -2,12 +2,16 @@
 
 namespace App\Policies;
 
-use App\Enums\UserRole;
 use App\Models\Task;
 use App\Models\User;
 
 class TaskPolicy
 {
+    public function before(User $user, string $ability): ?bool
+    {
+        return $user->isAdmin() ? true : null;
+    }
+
     public function viewAny(User $user): bool
     {
         return true;
@@ -15,43 +19,55 @@ class TaskPolicy
 
     public function view(User $user, Task $task): bool
     {
-        if ($user->role === UserRole::ViceMayor) {
-            return $user->managedDepartments()->whereKey($task->department_id)->exists();
+        if ($user->isViceMayor()) {
+            return in_array($task->department_id, $user->managedDepartmentIds(), true);
         }
 
-        return true;
+        if ($user->isManager()) {
+            return $user->department_id !== null && $user->department_id === $task->department_id;
+        }
+
+        if ($user->isStaff()) {
+            return $task->assignee_id === $user->id;
+        }
+
+        return false;
     }
 
     public function create(User $user): bool
     {
-        return true;
+        return $user->isViceMayor() || $user->isManager();
     }
 
     public function update(User $user, Task $task): bool
     {
-        if ($user->role === UserRole::ViceMayor) {
-            return $user->managedDepartments()->whereKey($task->department_id)->exists();
+        if ($user->isViceMayor()) {
+            return in_array($task->department_id, $user->managedDepartmentIds(), true);
         }
 
-        return true;
+        if ($user->isManager()) {
+            return $user->department_id !== null && $user->department_id === $task->department_id;
+        }
+
+        if ($user->isStaff()) {
+            return $task->assignee_id === $user->id;
+        }
+
+        return false;
     }
 
     public function delete(User $user, Task $task): bool
     {
-        if ($user->role === UserRole::ViceMayor) {
-            return $user->managedDepartments()->whereKey($task->department_id)->exists();
-        }
-
-        return true;
+        return false;
     }
 
     public function restore(User $user, Task $task): bool
     {
-        return true;
+        return false;
     }
 
     public function forceDelete(User $user, Task $task): bool
     {
-        return true;
+        return false;
     }
 }

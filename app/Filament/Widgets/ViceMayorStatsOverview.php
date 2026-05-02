@@ -18,11 +18,11 @@ class ViceMayorStatsOverview extends BaseWidget
         $totalStaff = (int) ReportScope::scopedDepartmentQuery()->sum('staff_count');
 
         $activeTasks = (int) ReportScope::scopedTaskQuery()
-            ->where('status', '!=', TaskStatus::Tamamlandi)
+            ->whereNotIn('status', [TaskStatus::Tamamlandi, TaskStatus::Kapatildi])
             ->count();
 
         $resolvedToday = (int) ReportScope::scopedTaskQuery()
-            ->where('status', TaskStatus::Tamamlandi)
+            ->whereIn('status', [TaskStatus::Tamamlandi, TaskStatus::Kapatildi])
             ->whereDate('resolved_at', today())
             ->count();
 

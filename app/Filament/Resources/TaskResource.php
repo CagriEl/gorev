@@ -57,6 +57,8 @@ class TaskResource extends Resource
                                     $user = auth()->user();
                                     if ($user?->role === UserRole::ViceMayor) {
                                         $query->where('vice_mayor_id', $user->id);
+                                    } elseif ($user?->role === UserRole::Manager) {
+                                        $query->whereKey($user->department_id);
                                     }
                                 },
                             )
@@ -65,7 +67,13 @@ class TaskResource extends Resource
                             ->preload(),
                         Forms\Components\Select::make('assignee_id')
                             ->label('Atanan personel')
-                            ->relationship('assignee', 'name')
+                            ->relationship(
+                                'assignee',
+                                'name',
+                                modifyQueryUsing: function (Builder $query) {
+                                    $query->where('role', UserRole::Staff);
+                                },
+                            )
                             ->searchable()
                             ->preload()
                             ->nullable(),
@@ -78,11 +86,25 @@ class TaskResource extends Resource
                                     ->label('Enlem')
                                     ->numeric()
                                     ->step(0.0000001)
+                                    ->rule('required_with:longitude')
+                                    ->rules(['nullable', 'numeric', 'between:-90,90'])
+                                    ->validationMessages([
+                                        'required_with' => 'Boylam girildiğinde enlem de zorunludur.',
+                                        'numeric' => 'Enlem sayısal bir değer olmalıdır.',
+                                        'between' => 'Enlem −90 ile 90 derece arasında olmalıdır.',
+                                    ])
                                     ->extraInputAttributes(['x-on:blur' => '$dispatch(\'leaflet-sync-from-form\')']),
                                 Forms\Components\TextInput::make('longitude')
                                     ->label('Boylam')
                                     ->numeric()
                                     ->step(0.0000001)
+                                    ->rule('required_with:latitude')
+                                    ->rules(['nullable', 'numeric', 'between:-180,180'])
+                                    ->validationMessages([
+                                        'required_with' => 'Enlem girildiğinde boylam da zorunludur.',
+                                        'numeric' => 'Boylam sayısal bir değer olmalıdır.',
+                                        'between' => 'Boylam −180 ile 180 derece arasında olmalıdır.',
+                                    ])
                                     ->extraInputAttributes(['x-on:blur' => '$dispatch(\'leaflet-sync-from-form\')']),
                             ]),
                         Forms\Components\ViewField::make('location_map')
@@ -106,6 +128,31 @@ class TaskResource extends Resource
                         Forms\Components\Textarea::make('description')
                             ->label('Açıklama')
                             ->rows(3)
+                            ->columnSpanFull(),
+                        Forms\Components\Textarea::make('solution_note')
+                            ->label('Çözüm notu')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                        Forms\Components\Tabs::make('task_photos')
+                            ->tabs([
+                                Forms\Components\Tabs\Tab::make('Göreve varış fotoğrafı')
+                                    ->schema([
+                                        Forms\Components\FileUpload::make('arrival_photos')
+                                            ->label('Varış fotoğrafları')
+                                            ->multiple()
+                                            ->required(fn (string $operation): bool => $operation === 'create')
+                                            ->image()
+                                            ->directory('task-arrival-photos'),
+                                    ]),
+                                Forms\Components\Tabs\Tab::make('Görev sonrası fotoğraf')
+                                    ->schema([
+                                        Forms\Components\FileUpload::make('completion_photos')
+                                            ->label('Sonrası fotoğrafları')
+                                            ->multiple()
+                                            ->image()
+                                            ->directory('task-completion-photos'),
+                                    ]),
+                            ])
                             ->columnSpanFull(),
                         Forms\Components\DateTimePicker::make('assigned_at')
                             ->label('Atanma'),
@@ -179,6 +226,9 @@ class TaskResource extends Resource
                     ->color(fn ($state): string => match ($state instanceof TaskStatus ? $state : TaskStatus::tryFrom((string) $state)) {
                         TaskStatus::Sahada => 'warning',
                         TaskStatus::Yonlendirildi => 'info',
+                        TaskStatus::Cozuldu => 'primary',
+                        TaskStatus::OnayBekliyor => 'warning',
+                        TaskStatus::Kapatildi => 'success',
                         TaskStatus::Tamamlandi => 'success',
                         TaskStatus::Bekliyor => 'gray',
                         default => 'gray',
@@ -207,7 +257,7 @@ class TaskResource extends Resource
                     ->label('SLA')
                     ->badge()
                     ->getStateUsing(function (Task $record): ?string {
-                        if ($record->status !== TaskStatus::Tamamlandi) {
+                        if (! in_array($record->status, [TaskStatus::Tamamlandi, TaskStatus::Kapatildi], true)) {
                             return null;
                         }
                         $ok = $record->slaWithinTarget(Task::SLA_TARGET_MINUTES);
@@ -225,13 +275,17 @@ class TaskResource extends Resource
                     })
                     ->placeholder('—'),
             ])
+            ->filters([
+                Tables\Filters\TrashedFilter::make(),
+            ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn (Task $record): bool => auth()->user()?->can('update', $record) ?? false),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()->visible(false),
                 ]),
             ])
             ->defaultSort('assigned_at', 'desc');
@@ -272,8 +326,22 @@ class TaskResource extends Resource
         if ($user?->role === UserRole::ViceMayor) {
             $ids = $user->managedDepartments()->pluck('id')->all();
             $query->whereIn('department_id', $ids);
+        } elseif ($user?->role === UserRole::Manager && $user->department_id) {
+            $query->where('department_id', $user->department_id);
+        } elseif ($user?->role === UserRole::Staff) {
+            $query->where('assignee_id', $user->id);
         }
 
         return $query;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('create', Task::class) ?? false;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return false;
     }
 }
