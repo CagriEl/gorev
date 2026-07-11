@@ -12,6 +12,7 @@ use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
@@ -39,15 +40,19 @@ class AdminPanelProvider extends PanelProvider
                     html, body { font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; }
                     .fi-body { background-color: rgb(248 250 252); }
                     .dark .fi-body { background-color: rgb(2 6 23); }
-                </style>'.view('filament.hooks.panel-leaflet-head')->render(),
+                </style>'.(self::shouldLoadMapAssets() ? view('filament.hooks.panel-leaflet-head')->render() : ''),
             )
             ->renderHook(
                 PanelsRenderHook::SCRIPTS_BEFORE,
-                fn (): string => view('filament.hooks.panel-vendor-js')->render(),
+                fn (): string => self::shouldLoadMapAssets()
+                    ? view('filament.hooks.panel-vendor-js')->render()
+                    : '',
             )
             ->renderHook(
                 PanelsRenderHook::SCRIPTS_AFTER,
-                fn (): string => view('filament.hooks.leaflet-task-location-alpine')->render(),
+                fn (): string => self::shouldLoadMapAssets()
+                    ? view('filament.hooks.leaflet-task-location-alpine')->render()
+                    : '',
             )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -69,5 +74,10 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    private static function shouldLoadMapAssets(): bool
+    {
+        return ! Request::is('admin/login', 'admin/logout', 'admin/password-reset', 'admin/password-reset/*');
     }
 }
