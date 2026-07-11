@@ -119,13 +119,18 @@ class Task extends Model
 
     public static function generateTaskCode(): string
     {
-        $last = static::query()->orderByDesc('id')->value('task_code');
-        $next = 1045;
-        if ($last && preg_match('/KRL-(\d+)/', $last, $m)) {
-            $next = (int) $m[1] + 1;
-        }
+        $max = 1044;
 
-        return 'KRL-'.$next;
+        static::withTrashed()
+            ->where('task_code', 'like', 'KRL-%')
+            ->pluck('task_code')
+            ->each(function (string $code) use (&$max): void {
+                if (preg_match('/^KRL-(\d+)$/', $code, $m)) {
+                    $max = max($max, (int) $m[1]);
+                }
+            });
+
+        return 'KRL-'.($max + 1);
     }
 
     public function resolveDurationMinutes(): ?int

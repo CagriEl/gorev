@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    'mudurluk_classifier' => [
+        'url' => env('ML_CLASSIFIER_URL', 'http://127.0.0.1:8100'),
+        'api_key' => env('ML_CLASSIFIER_API_KEY'),
+        'timeout' => env('ML_CLASSIFIER_TIMEOUT', 5),
+        'python_path' => env('ML_PYTHON_PATH', base_path('ml/mudurluk-siniflandirici/.venv/bin/python')),
+        'project_path' => env('ML_PROJECT_PATH', base_path('ml/mudurluk-siniflandirici')),
+        'model_dir' => env('ML_MODEL_DIR', base_path('ml/mudurluk-siniflandirici/kaydedilen_model')),
+        'retrain_timeout' => env('ML_RETRAIN_TIMEOUT', 1200),
+        'retrain_via_queue' => env('ML_CLASSIFIER_RETRAIN_VIA_QUEUE', true),
+    ],
+
 ];

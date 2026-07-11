@@ -1,0 +1,15 @@
+{
+  "name": "gorev-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:full": "playwright test full-system --headed",
+    "test:full:slow": "PLAYWRIGHT_SLOW_MO=1000 PLAYWRIGHT_VIDEO=1 playwright test full-system --headed",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "dotenv": "^16.5.0"
+  }
+}

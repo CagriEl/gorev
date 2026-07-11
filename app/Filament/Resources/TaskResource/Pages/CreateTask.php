@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\TaskResource\Pages;
 
 use App\Enums\TaskStatus;
+use App\Enums\UserRole;
 use App\Filament\Resources\TaskResource;
+use App\Models\Department;
 use App\Models\Task;
 use App\Support\TaskForemanAssignee;
 use App\Support\TaskWorkflow;
@@ -13,6 +15,20 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateTask extends CreateRecord
 {
     protected static string $resource = TaskResource::class;
+
+    protected function afterFill(): void
+    {
+        $user = auth()->user();
+        if ($user?->role === UserRole::Manager && $user->department_id) {
+            $foremanId = Department::query()
+                ->whereKey((string) $user->department_id)
+                ->value('foreman_user_id');
+            $this->form->fill([
+                'department_id' => $user->department_id,
+                'assignee_id' => $foremanId !== null ? (string) $foremanId : null,
+            ]);
+        }
+    }
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {

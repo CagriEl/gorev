@@ -1,0 +1,20 @@
+{
+  "labels": [
+    {
+      "slug": "FEN_ISLERI",
+      "name": "Fen İşleri Müdürlüğü"
+    },
+    {
+      "slug": "TEMIZLIK_ISLERI",
+      "name": "Temizlik İşleri Müdürlüğü"
+    },
+    {
+      "slug": "PARK_BAHCE",
+      "name": "Park ve Bahçeler Müdürlüğü"
+    },
+    {
+      "slug": "VETERINER",
+      "name": "Veteriner İşleri Müdürlüğü"
+    }
+  ]
+}

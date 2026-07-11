@@ -33,6 +33,8 @@
                 <li><code>GET /api/v1/tasks</code>, <code>GET /api/v1/tasks/{id}</code>, <code>POST /api/v1/tasks</code>, <code>PATCH /api/v1/tasks/{id}</code></li>
                 <li><code>GET /api/v1/departments</code>, <code>GET /api/v1/departments/{id}</code></li>
                 <li><code>GET /api/v1/users</code>, <code>GET /api/v1/users/{id}</code></li>
+                <li><code>GET /api/v1/reports/dashboard</code> — müdür / başkan yardımcısı özeti</li>
+                <li><code>POST /api/v1/uploads/task-photo</code> — görev fotoğrafı (multipart)</li>
                 <li><code>GET /api/v1/approval-requests</code>, <code>POST /api/v1/approval-requests/{id}/approve</code>, <code>POST /api/v1/approval-requests/{id}/reject</code></li>
             </ul>
         </div>

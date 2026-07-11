@@ -10,6 +10,8 @@ use Filament\Pages\Page;
 
 class ViceMayorReport extends Page
 {
+    protected static string $view = 'filament.pages.vice-mayor-report';
+
     protected static ?string $slug = 'baskan-yardimcisi-raporu';
 
     protected static ?string $navigationIcon = 'heroicon-o-chart-pie';
@@ -37,7 +39,7 @@ class ViceMayorReport extends Page
         ];
     }
 
-    public function getHeaderWidgetsColumns(): int | string | array
+    public function getHeaderWidgetsColumns(): int|string|array
     {
         return 3;
     }
@@ -50,7 +52,7 @@ class ViceMayorReport extends Page
         ];
     }
 
-    public function getFooterWidgetsColumns(): int | string | array
+    public function getFooterWidgetsColumns(): int|string|array
     {
         return 2;
     }

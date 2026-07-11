@@ -34,6 +34,28 @@ class BelSystemSeeder extends Seeder
             ],
         );
 
+        $park = Department::query()->updateOrCreate(
+            ['name' => 'Park ve Bahçeler Müdürlüğü'],
+            [
+                'manager_name' => 'Elif Demir',
+                'manager_phone' => '0288 123 45 20',
+                'foreman_name' => 'Mehmet Demir',
+                'foreman_phone' => '0288 123 45 21',
+                'staff_count' => 65,
+            ],
+        );
+
+        $veteriner = Department::query()->updateOrCreate(
+            ['name' => 'Veteriner İşleri Müdürlüğü'],
+            [
+                'manager_name' => 'Burcu Aydın',
+                'manager_phone' => '0288 123 45 30',
+                'foreman_name' => 'Burak Yılmaz',
+                'foreman_phone' => '0288 123 45 31',
+                'staff_count' => 18,
+            ],
+        );
+
         $viceMayor = User::query()->updateOrCreate(
             ['email' => 'baskan.yardimcisi@kirklareli.bel.tr'],
             [
@@ -47,6 +69,8 @@ class BelSystemSeeder extends Seeder
 
         $fen->update(['vice_mayor_id' => $viceMayor->id]);
         $temizlik->update(['vice_mayor_id' => $viceMayor->id]);
+        $park->update(['vice_mayor_id' => $viceMayor->id]);
+        $veteriner->update(['vice_mayor_id' => $viceMayor->id]);
 
         User::query()->updateOrCreate(
             ['email' => 'admin@kirklareli.bel.tr'],

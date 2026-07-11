@@ -1,0 +1,101 @@
+sikayet_metni,mudurluk_slug
+100 yıl caddesinde kaldırım taşları çökmüş yürümek zor,FEN_ISLERI
+sokakta derin çukur var araç lastiği patladı,FEN_ISLERI
+gece sokak lambası yanmıyor güvenlik sorunu,FEN_ISLERI
+kanalizasyon kapağı açık çocuklar düşebilir,FEN_ISLERI
+asfalt yol çatlamış su birikiyor,FEN_ISLERI
+bordür taşları yola kaymış,FEN_ISLERI
+su borusu patladı cadde su altında kaldı,FEN_ISLERI
+kaldırım rampası kırık engelli geçemiyor,FEN_ISLERI
+trafik levhası devrilmiş görünmüyor,FEN_ISLERI
+menfez tıkalı yağmurda su birikiyor,FEN_ISLERI
+yaya geçidi çizgileri silinmiş,FEN_ISLERI
+köprü korkuluğu gevşemiş tehlikeli,FEN_ISLERI
+sokak adı tabelası eksik adres bulunamıyor,FEN_ISLERI
+parke taşı kalkmış tekerlek takılıyor,FEN_ISLERI
+istinat duvarı çatlak yıkılma riski,FEN_ISLERI
+yağmur gideri tıkalı mahalle su bastı,FEN_ISLERI
+elektrik direği eğilmiş teller sarkıyor,FEN_ISLERI
+okul önü kaldırım dar trafik sıkışıyor,FEN_ISLERI
+cadde ortasında çukur bisiklet devrildi,FEN_ISLERI
+altyapı çalışması sonrası yol düzeltilmemiş,FEN_ISLERI
+kırık cam ve moloz yol kenarında duruyor,FEN_ISLERI
+şantiye molozu kaldırıma dökülmüş,FEN_ISLERI
+kavşakta zemin çökmüş,FEN_ISLERI
+sinyalizasyon arızalı kaza riski,FEN_ISLERI
+yağmur sonrası çukur büyüdü,FEN_ISLERI
+çöp konteyneri taşıyor sokak kokuyor,TEMIZLIK_ISLERI
+çöpler toplanmadı üç gündür birikti,TEMIZLIK_ISLERI
+evsel atık kamyonu gelmedi,TEMIZLIK_ISLERI
+sokak süpürülmemiş toz ve kırıntı var,TEMIZLIK_ISLERI
+pazar yeri sonrası sokak pis,TEMIZLIK_ISLERI
+köpek dışkısı kaldırımda temizlenmeli,TEMIZLIK_ISLERI
+kağıt plastik atıklar rüzgarda saçıldı,TEMIZLIK_ISLERI
+çöp kutusu kırık atık yere dökülüyor,TEMIZLIK_ISLERI
+deniz kenarı çöp birikmiş,TEMIZLIK_ISLERI
+park içinde çöp yığını var,TEMIZLIK_ISLERI
+inşaat atığı sokakta bırakılmış,TEMIZLIK_ISLERI
+kırık cam şişe kaldırımda,TEMIZLIK_ISLERI
+sokak leğeni taşıyor koku yapıyor,TEMIZLIK_ISLERI
+geri dönüşüm kutusu dolu taşıyor,TEMIZLIK_ISLERI
+çöp kamyonu erken saatte gelmedi,TEMIZLIK_ISLERI
+mahalle arası çöp konteyneri eksik,TEMIZLIK_ISLERI
+sokak köşesinde atık yığını,TEMIZLIK_ISLERI
+çöpler çok dolu konteyner yetmiyor,TEMIZLIK_ISLERI
+sahil yürüyüş yolunda pislik var,TEMIZLIK_ISLERI
+piknik alanı sonrası çöp bırakılmış,TEMIZLIK_ISLERI
+sokak hayvanı dışkısı temizlenmemiş,TEMIZLIK_ISLERI
+yağmur sonrası lağım kokusu,TEMIZLIK_ISLERI
+market önü çöp kutusu sürekli dolu,TEMIZLIK_ISLERI
+cam ve metal atık ayrı toplanmıyor,TEMIZLIK_ISLERI
+sokak temizliği haftalardır yapılmıyor,TEMIZLIK_ISLERI
+parktaki ağaç budanmamış dal düşebilir,PARK_BAHCE
+çocuk oyun parkı salıncak kırık,PARK_BAHCE
+yeşil alan sulama yapılmıyor çimen kurudu,PARK_BAHCE
+park bankları boyasız ve kırık,PARK_BAHCE
+ağaç kökü kaldırımı kaldırdı,PARK_BAHCE
+park içi yürüyüş yolu çamurlu,PARK_BAHCE
+çiçek tarhları bakımsız,PARK_BAHCE
+fidan dikimi yapılmamış alan boş,PARK_BAHCE
+park aydınlatması çalışmıyor,PARK_BAHCE
+kaydırak paslı güvenli değil,PARK_BAHCE
+çim biçme yapılmamış görüntü kirliliği,PARK_BAHCE
+ağaç hastalıklı kuruyor dallar,PARK_BAHCE
+park tuvaleti kapalı ve kirli,PARK_BAHCE
+otopark yanı yeşil alan çöplü,PARK_BAHCE
+saksı bitkileri kurumuş,PARK_BAHCE
+park girişinde çalılar görüşü kapatıyor,PARK_BAHCE
+spor aletleri gevşek kaza riski,PARK_BAHCE
+göl kenarı çimen zarar görmüş,PARK_BAHCE
+park içi çeşme su akmıyor,PARK_BAHCE
+bahçe duvarı yıkılmış,PARK_BAHCE
+ağaç dalı elektrik hattına değiyor,PARK_BAHCE
+mezarlık çevresi ot budanmamış,PARK_BAHCE
+refüj yeşillik kurumuş,PARK_BAHCE
+park zemin kaplaması kalkmış,PARK_BAHCE
+çocuk parkı kum havuzu dağılmış,PARK_BAHCE
+sokak hayvanı yaralı yardım lazım,VETERINER
+saldırgan sokak köpeği var,VETERINER
+ölmüş kedi kaldırımda duruyor,VETERINER
+kuş yavrusu düşmüş bakım gerekli,VETERINER
+sokak hayvanlarına su konulmalı,VETERINER
+kedi yavrusu apartman bodrumunda,VETERINER
+köpek ısırığı oldu veteriner gerekli,VETERINER
+sokak köpeği trafikte tehlike,VETERINER
+yaralı martı kumsalda,VETERINER
+sokak kedisi hasta kusuyor,VETERINER
+köpek sürüsü mahallede geziyor,VETERINER
+hayvan barınağı kapasitesi dolu mu,VETERINER
+zehirlenme şüphesi olan kedi,VETERINER
+sokak hayvanı kısırlaştırma talebi,VETERINER
+ölü köpek yol kenarında,VETERINER
+yavru köpek terk edilmiş,VETERINER
+sokak hayvanı mama istasyonu boş,VETERINER
+kedi mama kutusu kırık,VETERINER
+sokak köpeği sürekli havlıyor,VETERINER
+yaralı kaplumbağa bulundu,VETERINER
+sokak hayvanı aşı kampanyası isteniyor,VETERINER
+köpek kulübesi yıkılmış soğukta,VETERINER
+sokak kedisi araba motoruna girdi,VETERINER
+hayvan istilası şikayeti,VETERINER
+sokak hayvanı toplama talebi,VETERINER

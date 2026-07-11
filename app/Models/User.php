@@ -46,6 +46,11 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class);
     }
 
+    public function pushTokens(): HasMany
+    {
+        return $this->hasMany(PushToken::class);
+    }
+
     /**
      * Başkan yardımcısına bağlı müdürlükler (sorumluluk alanı).
      *

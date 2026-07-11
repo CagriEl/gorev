@@ -49,6 +49,24 @@ class TaskWorkflowTest extends TestCase
         ], $task);
     }
 
+    public function test_allows_kapatildi_when_closure_fields_exist_on_task(): void
+    {
+        $task = new Task();
+        $task->status = TaskStatus::Cozuldu;
+        $task->resolved_at = now();
+        $task->solution_note = 'Çözüldü';
+        $task->arrival_photos = ['arrival-1.jpg'];
+        $task->completion_photos = ['completion-1.jpg'];
+        $task->assigned_at = now()->subHours(2);
+        $task->dispatched_at = now()->subHour();
+
+        TaskWorkflow::assertRequiredFields([
+            'status' => TaskStatus::Kapatildi->value,
+        ], $task);
+
+        $this->assertTrue(true);
+    }
+
     public function test_requires_arrival_photo_for_sahada_status(): void
     {
         $task = new Task();

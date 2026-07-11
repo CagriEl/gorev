@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Bel-Sistem",
+    "slug": "bel-sistem",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "tr.bel.sistem.mobile",
+      "infoPlist": {
+        "UIBackgroundModes": ["remote-notification"]
+      }
+    },
+    "android": {
+      "package": "tr.bel.sistem.mobile",
+      "usesCleartextTraffic": true,
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#3b82f6",
+          "defaultChannel": "task-assignments"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Görev fotoğrafı için kamera erişimi gerekir."
+        }
+      ]
+    ]
+  }
+}

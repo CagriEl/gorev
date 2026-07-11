@@ -1,0 +1,34 @@
+sikayet_metni,mudurluk_slug
+kaldırım taşları çöktü yürümek imkansız,FEN_ISLERI
+100 yıl caddesinde çukur oluştu araçlar zarar görüyor,FEN_ISLERI
+sokak lambası yanmıyor gece karanlık,FEN_ISLERI
+kanalizasyon kapağı kırık tehlikeli,FEN_ISLERI
+yol asfaltı döküldü,FEN_ISLERI
+bordür taşları devrilmiş,FEN_ISLERI
+su borusu patladı cadde su altında,FEN_ISLERI
+kırık kaldırım engelli rampası kullanılamıyor,FEN_ISLERI
+caddeye dökülen molozlar temizlenmeli,FEN_ISLERI
+trafik levhası devrilmiş,FEN_ISLERI
+çöpler çok dolu,TEMIZLIK_ISLERI
+çöp kutuları taşıyor kokuyor,TEMIZLIK_ISLERI
+evsel atık toplanmıyor,TEMIZLIK_ISLERI
+çöp konteyneri dolmuş taşıyor,TEMIZLIK_ISLERI
+sokakta çöp birikmiş koku yapıyor,TEMIZLIK_ISLERI
+pazar sonrası sokak kirli,TEMIZLIK_ISLERI
+köpek dışkısı temizlenmemiş,TEMIZLIK_ISLERI
+kağıt ve plastik atıklar saçılmış,TEMIZLIK_ISLERI
+çöp kamyonu gelmedi mahalle,TEMIZLIK_ISLERI
+park alanında çöp yığını,TEMIZLIK_ISLERI
+sokak süpürülmemiş haftadır,TEMIZLIK_ISLERI
+kırık cam ve atık kaldırım kenarında,TEMIZLIK_ISLERI
+deniz kenarı çöp temizliği gerekli,TEMIZLIK_ISLERI
+parktaki ağaç budanmamış dal düşme riski,PARK_BAHCE
+çocuk parkı salıncak kırık,PARK_BAHCE
+yeşil alan sulama yapılmıyor çimen kurudu,PARK_BAHCE
+park bankları kırık,PARK_BAHCE
+ağaç kökü kaldırımı kaldırdı,PARK_BAHCE
+sokak hayvanı yaralı yardım gerekli,VETERINER
+sokak köpeği saldırgan,VETERINER
+ölmüş kedi kaldırımda,VETERINER
+kuş yavrusu düşmüş,VETERINER
+sokak hayvanlarına su konulmalı,VETERINER

@@ -8,7 +8,6 @@ use App\Enums\UserRole;
 use App\Filament\Resources\TaskResource\Pages;
 use App\Models\Department;
 use App\Models\Task;
-use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -77,29 +76,42 @@ class TaskResource extends Resource
                                 $foremanId = Department::query()
                                     ->whereKey((string) $state)
                                     ->value('foreman_user_id');
-                                $set('assignee_id', $foremanId);
+                                $set('assignee_id', $foremanId !== null ? (string) $foremanId : null);
                             }),
                         Forms\Components\Select::make('assignee_id')
                             ->label('Atanan (saha şefi)')
-                            ->helperText('Müdürlük seçildiğinde otomatik olarak tanımlı saha şefi kullanıcısı atanır.')
-                            ->options(function (Get $get): array {
-                                $deptId = $get('department_id');
-                                if ($deptId === null || $deptId === '') {
-                                    return [];
-                                }
-                                $foremanId = Department::query()
-                                    ->whereKey((string) $deptId)
-                                    ->value('foreman_user_id');
-                                if (! $foremanId) {
-                                    return [];
-                                }
-                                $name = User::query()->whereKey($foremanId)->value('name');
+                            ->relationship(
+                                name: 'assignee',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: function (Builder $query, Get $get): Builder {
+                                    $deptId = $get('department_id');
+                                    if ($deptId === null || $deptId === '') {
+                                        return $query->whereRaw('0 = 1');
+                                    }
+                                    $foremanId = Department::query()
+                                        ->whereKey((string) $deptId)
+                                        ->value('foreman_user_id');
+                                    if (! $foremanId) {
+                                        return $query->whereRaw('0 = 1');
+                                    }
 
-                                return $name ? [(int) $foremanId => (string) $name] : [];
-                            })
+                                    return $query->whereKey((string) $foremanId);
+                                },
+                            )
                             ->searchable(false)
                             ->preload()
-                            ->nullable(),
+                            ->nullable()
+                            ->helperText(function (Get $get): ?string {
+                                $deptId = $get('department_id');
+                                if ($deptId === null || $deptId === '') {
+                                    return 'Önce müdürlük seçin.';
+                                }
+                                if (! Department::query()->whereKey((string) $deptId)->value('foreman_user_id')) {
+                                    return 'Bu müdürlükte «Saha şefi kullanıcısı» yok. Müdürlükler kaydında düzenleyerek atayın; ardından müdürlüğü yeniden seçin.';
+                                }
+
+                                return 'Müdürlükte tanımlı saha şefi kullanıcısına atanır.';
+                            }),
                         Forms\Components\TextInput::make('location')
                             ->label('Adres / konum')
                             ->maxLength(255),

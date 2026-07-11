@@ -27,6 +27,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->databaseNotifications()
             ->brandName('Bel-Sistem | Kırklareli Yönetim')
             ->colors([
                 'primary' => Color::hex('#3b82f6'),

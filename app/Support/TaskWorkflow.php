@@ -77,12 +77,14 @@ final class TaskWorkflow
         }
 
         if (in_array($status, [TaskStatus::Cozuldu, TaskStatus::OnayBekliyor, TaskStatus::Kapatildi], true)) {
-            if (empty($data['resolved_at'])) {
+            $resolvedAt = $data['resolved_at'] ?? $task?->resolved_at;
+            if (empty($resolvedAt)) {
                 throw ValidationException::withMessages([
                     'resolved_at' => 'Çözüldü/Kapatıldı durumunda tamamlanma tarihi zorunludur.',
                 ]);
             }
-            if (empty($data['solution_note'])) {
+            $solutionNote = $data['solution_note'] ?? $task?->solution_note;
+            if (empty($solutionNote)) {
                 throw ValidationException::withMessages([
                     'solution_note' => 'Kapanış için çözüm notu zorunludur.',
                 ]);
